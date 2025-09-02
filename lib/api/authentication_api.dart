@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 class AuthenticationAPI {
   static const String baseUrl = "https://appperpus.mobileprojp.com/api";
+
   static Future<UserModel?> registerUser({
     required String name,
     required String email,
@@ -28,8 +29,11 @@ class AuthenticationAPI {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final user = userModelFromJson(response.body);
+
+        // Simpan token & userId
         await SharedPreferencesHelper.saveToken(user.data.token);
         await SharedPreferencesHelper.saveUser(
+          id: user.data.user.id,
           name: user.data.user.name,
           email: user.data.user.email,
         );
@@ -44,6 +48,7 @@ class AuthenticationAPI {
       return null;
     }
   }
+
   static Future<UserModel?> loginUser({
     required String email,
     required String password,
@@ -60,8 +65,11 @@ class AuthenticationAPI {
 
       if (response.statusCode == 200) {
         final user = userModelFromJson(response.body);
+
+        // Simpan token & userId
         await SharedPreferencesHelper.saveToken(user.data.token);
         await SharedPreferencesHelper.saveUser(
+          id: user.data.user.id,
           name: user.data.user.name,
           email: user.data.user.email,
         );
@@ -76,16 +84,15 @@ class AuthenticationAPI {
       return null;
     }
   }
+
   static Future<void> logout() async {
     await SharedPreferencesHelper.clearAll();
   }
-  static Future<String?> getToken() async {
-    return SharedPreferencesHelper.getToken();
-  }
-  static Future<String?> getUserName() async {
-    return SharedPreferencesHelper.getUserName();
-  }
-  static Future<String?> getUserEmail() async {
-    return SharedPreferencesHelper.getUserEmail();
-  }
+
+  static Future<String?> getToken() async => SharedPreferencesHelper.getToken();
+  static Future<String?> getUserName() async =>
+      SharedPreferencesHelper.getUserName();
+  static Future<String?> getUserEmail() async =>
+      SharedPreferencesHelper.getUserEmail();
+  static Future<int?> getUserId() async => SharedPreferencesHelper.getUserId();
 }

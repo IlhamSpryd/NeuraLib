@@ -4,6 +4,7 @@ class SharedPreferencesHelper {
   static const String _keyToken = "auth_token";
   static const String _keyUserName = "user_name";
   static const String _keyUserEmail = "user_email";
+  static const String _keyUserId = "user_id";
 
   /// Simpan token
   static Future<void> saveToken(String token) async {
@@ -17,20 +18,28 @@ class SharedPreferencesHelper {
     return prefs.getString(_keyToken);
   }
 
-  /// Hapus token (logout)
+  /// Hapus token
   static Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyToken);
   }
 
-  /// Simpan data user
+  /// Simpan data user (dengan id)
   static Future<void> saveUser({
+    required int id,
     required String name,
     required String email,
   }) async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keyUserId, id);
     await prefs.setString(_keyUserName, name);
     await prefs.setString(_keyUserEmail, email);
+  }
+
+  /// Ambil id user
+  static Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_keyUserId);
   }
 
   /// Ambil nama user
@@ -48,6 +57,7 @@ class SharedPreferencesHelper {
   /// Hapus semua data user
   static Future<void> clearUser() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyUserId);
     await prefs.remove(_keyUserName);
     await prefs.remove(_keyUserEmail);
   }
