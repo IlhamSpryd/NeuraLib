@@ -1,13 +1,13 @@
 import 'dart:convert';
+import 'package:athena/models/add_book.dart';
+import 'package:athena/models/borrow_book.dart';
+import 'package:athena/models/delete_book.dart';
+import 'package:athena/models/list_book.dart';
+import 'package:athena/models/put_book.dart';
 import 'package:athena/models/history_book.dart';
 import 'package:athena/preference/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import '../api/endpoint.dart';
-import '../models/add_book.dart';
-import '../models/list_book.dart';
-import '../models/put_book.dart';
-import '../models/delete_book.dart';
-import '../models/borrow_book.dart';
 
 class BookApi {
   // 🔹 Header with token
@@ -26,33 +26,45 @@ class BookApi {
   ) async {
     try {
       final response = await fn().timeout(const Duration(seconds: 10));
-
       print('API Response: ${response.statusCode} - ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return response;
       } else {
-        try {
-          final Map<String, dynamic> errorResponse = json.decode(response.body);
-          final errorMessage = errorResponse['message'] ?? response.body;
-          throw Exception("HTTP ${response.statusCode}: $errorMessage");
-        } catch (e) {
-          throw Exception("HTTP ${response.statusCode}: ${response.body}");
-        }
+        final Map<String, dynamic> errorResponse = json.decode(response.body);
+        final errorMessage = errorResponse['message'] ?? response.body;
+        throw Exception("HTTP ${response.statusCode}: $errorMessage");
       }
-    } on FormatException {
-      throw Exception("Invalid response format from server");
     } catch (e) {
       throw Exception("Request failed: $e");
     }
   }
 
-  // 🔹 Get all books
-  static Future<ListBook?> getBooks() async {
+  // 🔹 Get all books with paging & search
+  static Future<ListBookItem?> getBooks({
+    int page = 1,
+    int limit = 20,
+    String search = "",
+  }) async {
+    final uri = Uri.parse(
+      "${Endpoint.books}?page=$page&limit=$limit&search=$search",
+    );
+
     final response = await _request(() async {
-      return http.get(Uri.parse(Endpoint.books), headers: await _headers());
+      return http.get(uri, headers: await _headers());
     });
-    return listBookFromJson(response.body);
+
+    final listBook = listBookItemFromJson(response.body);
+
+    // 🔹 Default coverUrl kalau null
+    if (listBook.data != null) {
+      for (var book in listBook.data!) {
+        book.coverUrl ??=
+            "https://via.placeholder.com/300x400?text=${Uri.encodeComponent(book.title ?? 'Book')}";
+      }
+    }
+
+    return listBook;
   }
 
   // 🔹 Add book

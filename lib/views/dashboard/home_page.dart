@@ -1,210 +1,512 @@
-// import 'package:flutter/material.dart';
-// import 'package:carousel_slider/carousel_slider.dart';
-// import '../api/book_api.dart';
-// import '../models/list_book.dart';
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:athena/api/book_api.dart';
+import 'package:athena/models/list_book.dart';
+import 'package:athena/views/add_edit_book_page.dart';
+import 'package:athena/views/dashboard/profile_page.dart';
+import 'package:athena/widgets/custom_navbar.dart';
 
-// class HomePage extends StatefulWidget {
-//   const HomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
-//   @override
-//   State<HomePage> createState() => _HomePageState();
-// }
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
 
-// class _HomePageState extends State<HomePage> {
-//   late Future<List<BookData>> _books;
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+  List<BookDatum> _books = [];
+  bool _isLoading = true;
+  bool _isFetchingMore = false;
+  bool _hasMore = true;
+  String? _error;
+  int _page = 1;
+  final int _limit = 20;
+  final ScrollController _scrollController = ScrollController();
 
-//   final List<String> banners = [
-//     "https://picsum.photos/800/300?1",
-//     "https://picsum.photos/800/300?2",
-//     "https://picsum.photos/800/300?3",
-//   ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchBooks();
+    _scrollController.addListener(_onScroll);
+  }
 
-//   final List<Map<String, String>> categories = [
-//     {"name": "Fiksi", "icon": "📚"},
-//     {"name": "Sains", "icon": "🔬"},
-//     {"name": "Sejarah", "icon": "🏛️"},
-//     {"name": "Teknologi", "icon": "💻"},
-//     {"name": "Agama", "icon": "☪️"},
-//     {"name": "Psikologi", "icon": "🧠"},
-//   ];
+  Future<void> _fetchBooks({bool loadMore = false}) async {
+    if (loadMore) {
+      setState(() => _isFetchingMore = true);
+    } else {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _books = _fetchBooks();
-//   }
+    try {
+      final response = await BookApi.getBooks(page: _page, limit: _limit);
 
-//   Future<List<BookData>> _fetchBooks() async {
-//     final listBook = await BookApi.getBooks();
-//     return listBook?.data ?? [];
-//   }
+      if (response != null && response.data != null) {
+        setState(() {
+          if (loadMore) {
+            _books.addAll(response.data!);
+          } else {
+            _books = response.data!;
+          }
+          if (response.data!.length < _limit) _hasMore = false;
+        });
+      } else {
+        setState(() {
+          if (!loadMore) _error = "Tidak ada buku ditemukan";
+          _hasMore = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        if (!loadMore) _error = e.toString();
+      });
+    } finally {
+      if (loadMore) {
+        setState(() => _isFetchingMore = false);
+      } else {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
-//   Future<void> _borrowBook(int bookId) async {
-//     try {
-//       await BookApi.borrowBook(bookId);
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(const SnackBar(content: Text("Book borrowed!")));
-//       setState(() => _books = _fetchBooks());
-//     } catch (e) {
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(SnackBar(content: Text("Error: $e")));
-//     }
-//   }
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isFetchingMore &&
+        _hasMore &&
+        !_isLoading) {
+      _page++;
+      _fetchBooks(loadMore: true);
+    }
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text("Athena Library"),
-//         backgroundColor: Colors.blue,
-//         elevation: 0,
-//       ),
-//       body: SingleChildScrollView(
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             // Banner carousel
-//             CarouselSlider(
-//               options: CarouselOptions(
-//                 height: 180,
-//                 autoPlay: true,
-//                 enlargeCenterPage: true,
-//               ),
-//               items: banners.map((url) {
-//                 return ClipRRect(
-//                   borderRadius: BorderRadius.circular(12),
-//                   child: Image.network(
-//                     url,
-//                     fit: BoxFit.cover,
-//                     width: double.infinity,
-//                   ),
-//                 );
-//               }).toList(),
-//             ),
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-//             const SizedBox(height: 20),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: CustomScrollView(
+        controller: _scrollController,
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            backgroundColor: Colors.deepPurple.shade900,
+            expandedHeight: 28,
+            title: _buildSearchBar(context),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none, color: Colors.white),
+                onPressed: () {},
+              ),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: _isLoading
+                ? const BookGridShimmer()
+                : _error != null
+                ? SizedBox(
+                    height: 400,
+                    child: Center(
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  )
+                : BookGrid(books: _books),
+          ),
+          if (_isFetchingMore)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+              ),
+            ),
+        ],
+      ),
+      bottomNavigationBar: CustomBottomNavbar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddEditBookPage()),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfilePage()),
+            );
+          } else {
+            setState(() {
+              _currentIndex = index;
+            });
+          }
+        },
+      ),
+    );
+  }
 
-//             // Kategori horizontal
-//             Padding(
-//               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-//               child: Text(
-//                 "Kategori",
-//                 style: Theme.of(context).textTheme.titleLarge,
-//               ),
-//             ),
-//             const SizedBox(height: 10),
-//             SizedBox(
-//               height: 80,
-//               child: ListView.builder(
-//                 scrollDirection: Axis.horizontal,
-//                 itemCount: categories.length,
-//                 itemBuilder: (context, index) {
-//                   final category = categories[index];
-//                   return Padding(
-//                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
-//                     child: Column(
-//                       children: [
-//                         CircleAvatar(
-//                           radius: 28,
-//                           backgroundColor: Colors.blue.shade100,
-//                           child: Text(
-//                             category["icon"]!,
-//                             style: const TextStyle(fontSize: 24),
-//                           ),
-//                         ),
-//                         const SizedBox(height: 5),
-//                         Text(
-//                           category["name"]!,
-//                           style: const TextStyle(fontSize: 12),
-//                         ),
-//                       ],
-//                     ),
-//                   );
-//                 },
-//               ),
-//             ),
+  Widget _buildSearchBar(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SearchPage()),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.search, color: Colors.grey),
+            const SizedBox(width: 8),
+            Text(
+              "Cari buku...",
+              style: TextStyle(color: Colors.grey[700], fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-//             const SizedBox(height: 20),
+// ==========================
+// BookGrid
+// ==========================
+class BookGrid extends StatelessWidget {
+  final List<BookDatum> books;
 
-//             // Rekomendasi buku dari API
-//             Padding(
-//               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-//               child: Text(
-//                 "Rekomendasi Buku",
-//                 style: Theme.of(context).textTheme.titleLarge,
-//               ),
-//             ),
-//             const SizedBox(height: 10),
-//             FutureBuilder<List<BookData>>(
-//               future: _books,
-//               builder: (context, snapshot) {
-//                 if (snapshot.connectionState == ConnectionState.waiting) {
-//                   return const Center(child: CircularProgressIndicator());
-//                 } else if (snapshot.hasError) {
-//                   return Center(child: Text("Error: ${snapshot.error}"));
-//                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-//                   return const Center(child: Text("No books available"));
-//                 } else {
-//                   final books = snapshot.data!;
-//                   return GridView.builder(
-//                     physics: const NeverScrollableScrollPhysics(),
-//                     shrinkWrap: true,
-//                     padding: const EdgeInsets.all(16),
-//                     gridDelegate:
-//                         const SliverGridDelegateWithFixedCrossAxisCount(
-//                           crossAxisCount: 2,
-//                           childAspectRatio: 0.65,
-//                           crossAxisSpacing: 16,
-//                           mainAxisSpacing: 16,
-//                         ),
-//                     itemCount: books.length,
-//                     itemBuilder: (context, index) {
-//                       final book = books[index];
-//                       return GestureDetector(
-//                         onTap: () => _borrowBook(book.id),
-//                         child: Column(
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           children: [
-//                             Expanded(
-//                               child: ClipRRect(
-//                                 borderRadius: BorderRadius.circular(12),
-//                                 child: Image.network(
-//                                   book.cover ?? "https://picsum.photos/200/300",
-//                                   fit: BoxFit.cover,
-//                                   width: double.infinity,
-//                                 ),
-//                               ),
-//                             ),
-//                             const SizedBox(height: 8),
-//                             Text(
-//                               book.title,
-//                               maxLines: 2,
-//                               overflow: TextOverflow.ellipsis,
-//                               style: const TextStyle(
-//                                 fontWeight: FontWeight.bold,
-//                                 fontSize: 14,
-//                               ),
-//                             ),
-//                             Text(
-//                               book.author,
-//                               style: const TextStyle(
-//                                 fontSize: 12,
-//                                 color: Colors.grey,
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       );
-//                     },
-//                   );
-//                 }
-//               },
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+  const BookGrid({super.key, required this.books});
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(12),
+      itemCount: books.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.6,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+      ),
+      itemBuilder: (context, index) {
+        final book = books[index];
+        return GestureDetector(
+          onTap: () {},
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl:
+                        book.coverUrl ??
+                        "https://via.placeholder.com/300x400?text=${Uri.encodeComponent(book.title ?? 'Book')}",
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Shimmer.fromColors(
+                      baseColor: Colors.grey.shade800,
+                      highlightColor: Colors.grey.shade600,
+                      child: Container(color: Colors.grey.shade800),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey.shade800,
+                      child: const Icon(
+                        Icons.error,
+                        color: Colors.white,
+                        size: 50,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                book.title ?? "Unknown",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                book.author ?? "Unknown",
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ==========================
+// Shimmer Placeholder
+// ==========================
+class BookGridShimmer extends StatelessWidget {
+  const BookGridShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(12),
+      itemCount: 6,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.6,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+      ),
+      itemBuilder: (context, index) {
+        return Shimmer.fromColors(
+          baseColor: Colors.grey.shade800,
+          highlightColor: Colors.grey.shade600,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade800,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ==========================
+// SearchPage
+// ==========================
+class SearchPage extends StatefulWidget {
+  const SearchPage({super.key});
+
+  @override
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
+  List<BookDatum> _books = [];
+  bool _isLoading = false;
+  String? _error;
+  Timer? _debounce;
+  String _searchQuery = "";
+
+  final ScrollController _scrollController = ScrollController();
+  int _page = 1;
+  final int _limit = 20;
+  bool _hasMore = true;
+  bool _isFetchingMore = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _searchQuery = query;
+        _page = 1;
+        _hasMore = true;
+      });
+      _fetchBooks();
+    });
+  }
+
+  Future<void> _fetchBooks({bool loadMore = false}) async {
+    if (_isLoading && !loadMore) return;
+    if (loadMore) {
+      setState(() => _isFetchingMore = true);
+    } else {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
+
+    try {
+      final response = await BookApi.getBooks(
+        page: _page,
+        limit: _limit,
+        search: _searchQuery,
+      );
+
+      if (response != null && response.data != null) {
+        setState(() {
+          if (loadMore) {
+            _books.addAll(response.data!);
+          } else {
+            _books = response.data!;
+          }
+          if (response.data!.length < _limit) _hasMore = false;
+        });
+      } else {
+        setState(() {
+          if (!loadMore) _error = "Tidak ada buku ditemukan";
+          _hasMore = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        if (!loadMore) _error = e.toString();
+      });
+    } finally {
+      if (loadMore) {
+        setState(() => _isFetchingMore = false);
+      } else {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isFetchingMore &&
+        _hasMore &&
+        !_isLoading) {
+      _page++;
+      _fetchBooks(loadMore: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _scrollController.addListener(_onScroll);
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple.shade900,
+        title: TextField(
+          style: const TextStyle(color: Colors.white),
+          onChanged: _onSearchChanged,
+          decoration: InputDecoration(
+            hintText: "Cari buku...",
+            hintStyle: TextStyle(color: Colors.grey.shade400),
+            prefixIcon: const Icon(Icons.search, color: Colors.grey),
+            filled: true,
+            fillColor: Colors.grey.shade900,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      ),
+      body: _isLoading && _books.isEmpty
+          ? const BookGridShimmer()
+          : _error != null && _books.isEmpty
+          ? Center(
+              child: Text(_error!, style: const TextStyle(color: Colors.white)),
+            )
+          : GridView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(12),
+              itemCount: _books.length + (_isFetchingMore ? 1 : 0),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.6,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+              ),
+              itemBuilder: (context, index) {
+                if (index >= _books.length) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
+                }
+                final book = _books[index];
+                return GestureDetector(
+                  onTap: () {},
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
+                          child: CachedNetworkImage(
+                            imageUrl:
+                                book.coverUrl ??
+                                "https://via.placeholder.com/300x400?text=${Uri.encodeComponent(book.title ?? 'Book')}",
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Shimmer.fromColors(
+                              baseColor: Colors.grey.shade800,
+                              highlightColor: Colors.grey.shade600,
+                              child: Container(color: Colors.grey.shade800),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: Colors.grey.shade800,
+                              child: const Icon(
+                                Icons.error,
+                                color: Colors.white,
+                                size: 50,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        book.title ?? "Unknown",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        book.author ?? "Unknown",
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
