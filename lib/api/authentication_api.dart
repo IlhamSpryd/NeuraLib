@@ -1,11 +1,13 @@
 import 'dart:convert';
+
 import 'package:athena/models/user_models.dart';
 import 'package:athena/preference/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-class AuthenticationAPI {
-  static const String baseUrl = "https://appperpus.mobileprojp.com/api";
+import 'endpoint.dart'; // pastikan file endpoint.dart lo import
 
+class AuthenticationAPI {
+  /// REGISTER USER
   static Future<UserModel?> registerUser({
     required String name,
     required String email,
@@ -14,7 +16,7 @@ class AuthenticationAPI {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/register"),
+        Uri.parse(Endpoint.register),
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
@@ -49,13 +51,14 @@ class AuthenticationAPI {
     }
   }
 
+  /// LOGIN USER
   static Future<UserModel?> loginUser({
     required String email,
     required String password,
   }) async {
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/login"),
+        Uri.parse(Endpoint.login),
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
@@ -85,14 +88,59 @@ class AuthenticationAPI {
     }
   }
 
+  /// LOGOUT USER
   static Future<void> logout() async {
     await SharedPreferencesHelper.clearAll();
   }
 
+  /// GET TOKEN / USER INFO
   static Future<String?> getToken() async => SharedPreferencesHelper.getToken();
   static Future<String?> getUserName() async =>
       SharedPreferencesHelper.getUserName();
   static Future<String?> getUserEmail() async =>
       SharedPreferencesHelper.getUserEmail();
   static Future<int?> getUserId() async => SharedPreferencesHelper.getUserId();
+
+  /// UPDATE USER PROFILE
+  static Future<UserModel?> updateUser({
+    required String name,
+    required String email,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        print("Token tidak tersedia");
+        return null;
+      }
+
+      final response = await http.put(
+        Uri.parse(Endpoint.profile), // endpoint profile
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"name": name, "email": email}),
+      );
+
+      if (response.statusCode == 200) {
+        final user = userModelFromJson(response.body);
+
+        // update SharedPreferences
+        await SharedPreferencesHelper.saveUser(
+          id: user.data.user.id,
+          name: user.data.user.name,
+          email: user.data.user.email,
+        );
+
+        return user;
+      } else {
+        print("Update profile gagal: ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print("Error updateUser: $e");
+      return null;
+    }
+  }
 }

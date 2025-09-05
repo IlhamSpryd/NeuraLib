@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'add_edit_book_page.dart';
+import 'main/add_edit_book_page.dart';
 
 class BookDetailPage extends StatelessWidget {
   final String title;

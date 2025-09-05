@@ -1,11 +1,6 @@
-// To parse this JSON data, do
-//
-//     final addBook = addBookFromJson(jsonString);
-
 import 'dart:convert';
 
 AddBook addBookFromJson(String str) => AddBook.fromJson(json.decode(str));
-
 String addBookToJson(AddBook data) => json.encode(data.toJson());
 
 class AddBook {
@@ -23,23 +18,26 @@ class AddBook {
 }
 
 class Data {
+  int? id;
   String? title;
   String? author;
   int? stock;
   DateTime? updatedAt;
   DateTime? createdAt;
-  int? id;
+  String? coverUrl;
 
   Data({
+    this.id,
     this.title,
     this.author,
     this.stock,
     this.updatedAt,
     this.createdAt,
-    this.id,
+    this.coverUrl,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
+    id: json["id"],
     title: json["title"],
     author: json["author"],
     stock: json["stock"],
@@ -49,15 +47,15 @@ class Data {
     createdAt: json["created_at"] == null
         ? null
         : DateTime.parse(json["created_at"]),
-    id: json["id"],
   );
 
   Map<String, dynamic> toJson() => {
+    "id": id,
     "title": title,
     "author": author,
     "stock": stock,
     "updated_at": updatedAt?.toIso8601String(),
     "created_at": createdAt?.toIso8601String(),
-    "id": id,
+    "coverUrl": coverUrl,
   };
 }

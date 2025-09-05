@@ -5,6 +5,8 @@ import '../api/endpoint.dart';
 import '../models/borrow_book.dart';
 
 class BorrowApi {
+  static const String baseUrl = "https://appperpus.mobileprojp.com/api";
+  
   // 🔹 Borrow book
   static Future<BorrowBook?> borrowBook({
     required int userId,

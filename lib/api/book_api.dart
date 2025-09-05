@@ -10,6 +10,8 @@ import 'package:http/http.dart' as http;
 import '../api/endpoint.dart';
 
 class BookApi {
+  static const String baseUrl = "https://appperpus.mobileprojp.com/api";
+  
   // 🔹 Header with token
   static Future<Map<String, String>> _headers({bool json = false}) async {
     final token = await SharedPreferencesHelper.getToken();

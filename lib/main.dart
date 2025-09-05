@@ -1,4 +1,6 @@
-import 'package:athena/views/splash_screen.dart';
+import 'package:athena/views/auth/login_page.dart';
+import 'package:athena/views/auth/register_page.dart';
+import 'package:athena/views/main/dashboard_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -13,11 +15,15 @@ class AthenaApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Athena Library',
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-        fontFamily: "Montserrat",
-      ),
-      home: const SplashScreen(),
+      theme: ThemeData(primarySwatch: Colors.blue, fontFamily: "Montserrat"),
+      initialRoute: '/',
+      routes: {
+        '/login': (context) => const LoginPage(),
+        '/register': (context) => const RegisterPage(),
+        '/dashboard': (context) => const DashboardPage(),
+      },
+
+      home: const DashboardPage(),
     );
   }
 }

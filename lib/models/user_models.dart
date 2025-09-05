@@ -5,42 +5,33 @@
 import 'dart:convert';
 
 UserModel userModelFromJson(String str) => UserModel.fromJson(json.decode(str));
-
 String userModelToJson(UserModel data) => json.encode(data.toJson());
 
 class UserModel {
-  String message;
-  UserData data;
+  UserModel({required this.data, required this.message});
 
-  UserModel({required this.message, required this.data});
+  final Data data;
+  final String message;
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-    message: json["message"],
-    data: UserData.fromJson(json["data"]),
-  );
+  factory UserModel.fromJson(Map<String, dynamic> json) =>
+      UserModel(data: Data.fromJson(json["data"]), message: json["message"]);
 
-  Map<String, dynamic> toJson() => {"message": message, "data": data.toJson()};
+  Map<String, dynamic> toJson() => {"data": data.toJson(), "message": message};
 }
 
-class UserData {
-  String token;
-  User user;
+class Data {
+  Data({required this.token, required this.user});
 
-  UserData({required this.token, required this.user});
+  final String token;
+  final User user;
 
-  factory UserData.fromJson(Map<String, dynamic> json) =>
-      UserData(token: json["token"], user: User.fromJson(json["user"]));
+  factory Data.fromJson(Map<String, dynamic> json) =>
+      Data(token: json["token"], user: User.fromJson(json["user"]));
 
   Map<String, dynamic> toJson() => {"token": token, "user": user.toJson()};
 }
 
 class User {
-  int id;
-  String name;
-  String email;
-  DateTime createdAt;
-  DateTime updatedAt;
-
   User({
     required this.id,
     required this.name,
@@ -49,19 +40,25 @@ class User {
     required this.updatedAt,
   });
 
+  final int id;
+  final String name;
+  final String email;
+  final String createdAt;
+  final String updatedAt;
+
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json["id"],
     name: json["name"],
     email: json["email"],
-    createdAt: DateTime.parse(json["created_at"]),
-    updatedAt: DateTime.parse(json["updated_at"]),
+    createdAt: json["created_at"],
+    updatedAt: json["updated_at"],
   );
 
   Map<String, dynamic> toJson() => {
     "id": id,
     "name": name,
     "email": email,
-    "created_at": createdAt.toIso8601String(),
-    "updated_at": updatedAt.toIso8601String(),
+    "created_at": createdAt,
+    "updated_at": updatedAt,
   };
 }

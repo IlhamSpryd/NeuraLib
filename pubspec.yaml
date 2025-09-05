@@ -31,6 +31,15 @@ flutter:
 
   assets:
     - assets/images/logoathena.png
+    - assets/images/home.png
+    - assets/images/home1.png
+    - assets/images/search.png
+    - assets/images/search1.png
+    - assets/images/user.png
+    - assets/images/user1.png
+    - assets/images/add.png
+    - assets/images/add1.png
+    - assets/images/settings-sliders.png
 
   fonts:
     - family: Montserrat
