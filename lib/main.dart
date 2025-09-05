@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:athena/views/auth/login_page.dart';
+import 'package:athena/views/edit_profile.dart';
 import 'package:athena/views/main/dashboard_page.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -21,6 +22,7 @@ class AthenaApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginPage(),
         '/dashboard': (context) => const DashboardPage(),
+        '/edit_profile': (context) => const EditProfilePage(),
       },
     );
   }

@@ -173,7 +173,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                 ),
-                title: Text(_userName ?? "Guest"),
+                title: Text(
+                  _userName ?? "Guest",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 subtitle: Text(_userEmail ?? "noemail@example.com"),
                 trailing: IconButton(
                   icon: const Icon(Icons.edit),

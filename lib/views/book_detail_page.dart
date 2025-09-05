@@ -1,118 +1,83 @@
 import 'package:flutter/material.dart';
 
+import 'main/add_edit_book_page.dart';
+
 class BookDetailPage extends StatelessWidget {
   final String title;
   final String author;
-  final String coverUrl;
+  final String? coverUrl; // ✅ tambah parameter coverUrl
 
   const BookDetailPage({
     super.key,
     required this.title,
     required this.author,
-    required this.coverUrl,
+    this.coverUrl, // nullable
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple.shade900,
-        title: Text("Detail Buku", style: const TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text("Detail Buku"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AddEditBookPage(), // tetap pake Add/Edit page
+                ),
+              );
+            },
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 🔹 Cover Buku
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Cover buku
+            if (coverUrl != null)
               Center(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
-                    coverUrl,
-                    height: 250,
+                    coverUrl!,
+                    width: 150,
+                    height: 200,
                     fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 🔹 Judul
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // 🔹 Penulis
-              Text(
-                "by $author",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[400],
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 🔹 Deskripsi Buku (dummy dulu)
-              const Text(
-                "Deskripsi Buku:\n\n"
-                "Buku ini membahas konsep secara mendalam dengan bahasa yang mudah dipahami. "
-                "Cocok untuk mahasiswa, peneliti, maupun pembaca umum yang ingin menambah wawasan. "
-                "Materi disusun sistematis agar pembaca bisa mengikuti dengan baik.",
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white70,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              // 🔹 Tombol Aksi
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurpleAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () {},
-                      icon: const Icon(Icons.book, color: Colors.white),
-                      label: const Text(
-                        "Baca Sekarang",
-                        style: TextStyle(color: Colors.white),
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 150,
+                      height: 200,
+                      color: Colors.grey[200],
+                      child: Icon(
+                        Icons.book_rounded,
+                        color: Colors.grey[400],
+                        size: 60,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.favorite_border,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.download, color: Colors.white),
-                    onPressed: () {},
-                  ),
-                ],
+                ),
               ),
-            ],
-          ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text("Penulis: $author", style: const TextStyle(fontSize: 18)),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () {
+                // Integrasi API delete di sini
+                Navigator.pop(context);
+              },
+              child: const Text("Hapus Buku"),
+            ),
+          ],
         ),
       ),
     );

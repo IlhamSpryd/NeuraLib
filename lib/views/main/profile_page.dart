@@ -1,3 +1,4 @@
+// profile_page.dart - Modern UI Design
 import 'package:athena/preference/shared_preferences.dart';
 import 'package:athena/views/settings_page.dart';
 import 'package:flutter/material.dart';
@@ -31,21 +32,35 @@ class _ProfileBodyState extends State<ProfileBody> {
 
   void _copyToClipboard(String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("$label berhasil disalin")));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("$label berhasil disalin"),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     if (_userName == null || _userEmail == null) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+          ),
+        ),
+      );
     }
 
     return Column(
       children: [
         // Custom AppBar dengan SafeArea
         SafeArea(
+          bottom: false,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
@@ -55,16 +70,23 @@ class _ProfileBodyState extends State<ProfileBody> {
                 const Text(
                   "Profile",
                   style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
                 ),
                 IconButton(
-                  icon: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Image.asset("assets/images/settings-sliders.png"),
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.settings_rounded,
+                      color: Colors.grey[700],
+                      size: 22,
+                    ),
                   ),
                   onPressed: () {
                     Navigator.push(
@@ -85,15 +107,26 @@ class _ProfileBodyState extends State<ProfileBody> {
             child: Column(
               children: [
                 // Avatar
-                CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.deepPurpleAccent,
-                  child: Text(
-                    _userName!.isNotEmpty ? _userName![0].toUpperCase() : "?",
-                    style: const TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple,
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Colors.deepPurple[700]!, Colors.purple[400]!],
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _userName!.isNotEmpty ? _userName![0].toUpperCase() : "?",
+                      style: const TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -103,15 +136,15 @@ class _ProfileBodyState extends State<ProfileBody> {
                 Text(
                   _userName!,
                   style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   _userEmail!,
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 20),
 
@@ -124,17 +157,20 @@ class _ProfileBodyState extends State<ProfileBody> {
                       if (updated == true) _loadProfileData();
                     });
                   },
-                  icon: const Icon(Icons.edit),
+                  icon: const Icon(Icons.edit_rounded, size: 18),
                   label: const Text("Edit Profil"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
+                    foregroundColor: Colors.deepPurple,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 12,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    elevation: 1,
+                    side: BorderSide(color: Colors.grey[200]!),
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -143,13 +179,13 @@ class _ProfileBodyState extends State<ProfileBody> {
                 _buildInteractiveInfoCard(
                   "Nama",
                   _userName!,
-                  icon: Icons.person,
+                  icon: Icons.person_rounded,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 _buildInteractiveInfoCard(
                   "Email",
                   _userEmail!,
-                  icon: Icons.email,
+                  icon: Icons.email_rounded,
                 ),
                 const SizedBox(height: 40),
               ],
@@ -166,32 +202,40 @@ class _ProfileBodyState extends State<ProfileBody> {
     required IconData icon,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       onTap: () => _copyToClipboard(value, title),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.deepPurpleAccent.withOpacity(0.2),
+              color: Colors.grey.withOpacity(0.1),
               blurRadius: 10,
-              offset: const Offset(0, 5),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.deepPurpleAccent, size: 30),
-            const SizedBox(width: 20),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.deepPurple, size: 20),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -200,13 +244,13 @@ class _ProfileBodyState extends State<ProfileBody> {
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.copy, color: Colors.grey, size: 20),
+            Icon(Icons.copy_rounded, color: Colors.grey[400], size: 20),
           ],
         ),
       ),
