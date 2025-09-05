@@ -1,3 +1,4 @@
+// add_book.dart
 import 'dart:convert';
 
 AddBook addBookFromJson(String str) => AddBook.fromJson(json.decode(str));
@@ -21,7 +22,7 @@ class Data {
   int? id;
   String? title;
   String? author;
-  int? stock;
+  int? stock; // ✅ Tetap int
   DateTime? updatedAt;
   DateTime? createdAt;
   String? coverUrl;
@@ -40,7 +41,8 @@ class Data {
     id: json["id"],
     title: json["title"],
     author: json["author"],
-    stock: json["stock"],
+    // ✅ FIX: Handle both String and int for stock
+    stock: _parseStock(json["stock"]),
     updatedAt: json["updated_at"] == null
         ? null
         : DateTime.parse(json["updated_at"]),
@@ -48,6 +50,19 @@ class Data {
         ? null
         : DateTime.parse(json["created_at"]),
   );
+
+  // ✅ Helper method untuk parse stock
+  static int? _parseStock(dynamic stockValue) {
+    if (stockValue == null) return null;
+
+    if (stockValue is int) {
+      return stockValue;
+    } else if (stockValue is String) {
+      return int.tryParse(stockValue);
+    } else {
+      return null;
+    }
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,

@@ -1,12 +1,13 @@
+// add_edit_book_page.dart - FIXED VERSION
 import 'dart:io';
-
 import 'package:athena/api/book_api.dart';
-import 'package:athena/models/add_book.dart'; // Data dipakai untuk return ke HomePage
+import 'package:athena/models/add_book.dart';
 import 'package:flutter/material.dart';
 
 class AddEditBookPage extends StatefulWidget {
-  const AddEditBookPage({super.key});
+  final VoidCallback? onBookAdded; // ✅ JADIKAN OPTIONAL
 
+  const AddEditBookPage({super.key, this.onBookAdded});
   @override
   State<AddEditBookPage> createState() => _AddEditBookPageState();
 }
@@ -27,7 +28,11 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
   }
 
   Future<void> _saveBook() async {
-    if (!_formKey.currentState!.validate()) return;
+    // ✅ VALIDATE FORM FIRST
+    if (!_formKey.currentState!.validate()) {
+      print('❌ Form validation failed');
+      return;
+    }
 
     final stock = int.tryParse(_stockController.text);
     if (stock == null || stock < 0) {
@@ -37,7 +42,11 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
       return;
     }
 
-    if (mounted) setState(() => _isSaving = true);
+    print('💾 Saving book: ${_titleController.text}');
+
+    // ✅ SAFE SETSTATE - CHECK MOUNTED
+    if (!mounted) return;
+    setState(() => _isSaving = true);
 
     try {
       final AddBook? response = await BookApi.addBook(
@@ -46,34 +55,77 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
         stock: stock,
       );
 
-      print("DEBUG API RESPONSE: ${response?.toJson()}");
+      print("✅ API Response: ${response?.toJson()}");
 
-      if (!mounted) return;
+      // ✅ CRITICAL FIX: CHECK MOUNTED BEFORE ANY UI OPERATION
+      if (!mounted) {
+        print('⚠️ Widget not mounted, skipping UI operations');
+        return;
+      }
 
       if (response != null && response.data != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Buku berhasil ditambahkan")),
+          const SnackBar(content: Text("Buku berhasil ditambahkan!")),
         );
 
-        // 🔹 Kirim data buku baru ke HomePage
-        Navigator.pop(context, response.data);
+        // ✅ CLEAR FORM
+        _titleController.clear();
+        _authorController.clear();
+        _stockController.clear();
+
+        // ✅ WAIT FOR USER TO SEE SUCCESS MESSAGE
+        await Future.delayed(const Duration(milliseconds: 1500));
+
+        // ✅ SAFE NAVIGATION BACK
+        _navigateBack();
       } else {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Gagal menambahkan buku")));
+
+        // ✅ SAFE SETSTATE - CHECK MOUNTED
+        if (mounted) {
+          setState(() => _isSaving = false);
+        }
       }
     } on SocketException {
+      // ✅ SAFE ERROR HANDLING
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Tidak ada koneksi internet")),
       );
+
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     } catch (e) {
+      print('❌ Error saving book: $e');
+
+      // ✅ SAFE ERROR HANDLING
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
+      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  // ✅ NEW METHOD: SAFE NAVIGATION
+  void _navigateBack() {
+    if (mounted) {
+      // ✅ CLEAR FOCUS FIRST TO AVOID KEYBOARD ISSUES
+      FocusScope.of(context).unfocus();
+
+      // ✅ USE NAVIGATOR.MAYBEPOP FOR SAFETY
+      Navigator.maybePop(context).then((_) {
+        // ✅ SAFE SETSTATE AFTER NAVIGATION
+        if (mounted) {
+          setState(() => _isSaving = false);
+        }
+      });
     }
   }
 
@@ -133,73 +185,81 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
         elevation: 0.3,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black87),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // ✅ SAFE NAVIGATION BACK
+            _navigateBack();
+          },
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildTextField(
-                controller: _titleController,
-                label: "Judul Buku",
-                validator: (val) => val == null || val.isEmpty
-                    ? "Judul tidak boleh kosong"
-                    : null,
-                prefixIcon: Icons.book,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _authorController,
-                label: "Penulis",
-                validator: (val) => val == null || val.isEmpty
-                    ? "Penulis tidak boleh kosong"
-                    : null,
-                prefixIcon: Icons.person,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _stockController,
-                label: "Stok",
-                type: TextInputType.number,
-                validator: (val) => val == null || val.isEmpty
-                    ? "Stok tidak boleh kosong"
-                    : null,
-                prefixIcon: Icons.confirmation_num,
-              ),
-              const SizedBox(height: 28),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _saveBook,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple.withOpacity(
-                    _isSaving ? 0.6 : 1,
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
+      body: GestureDetector(
+        // ✅ ADD TAP TO DISMISS KEYBOARD
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildTextField(
+                  controller: _titleController,
+                  label: "Judul Buku",
+                  validator: (val) => val == null || val.isEmpty
+                      ? "Judul tidak boleh kosong"
+                      : null,
+                  prefixIcon: Icons.book,
                 ),
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _authorController,
+                  label: "Penulis",
+                  validator: (val) => val == null || val.isEmpty
+                      ? "Penulis tidak boleh kosong"
+                      : null,
+                  prefixIcon: Icons.person,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _stockController,
+                  label: "Stok",
+                  type: TextInputType.number,
+                  validator: (val) => val == null || val.isEmpty
+                      ? "Stok tidak boleh kosong"
+                      : null,
+                  prefixIcon: Icons.confirmation_num,
+                ),
+                const SizedBox(height: 28),
+                ElevatedButton(
+                  onPressed: _isSaving ? null : _saveBook,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          "Simpan",
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      )
-                    : const Text(
-                        "Simpan",
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

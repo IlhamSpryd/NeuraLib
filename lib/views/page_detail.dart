@@ -18,7 +18,9 @@ class BookDetailPage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AddEditBookPage()),
+                MaterialPageRoute(
+                  builder: (_) => AddEditBookPage(), // ✅ SUDAH FIX
+                ),
               );
             },
           ),

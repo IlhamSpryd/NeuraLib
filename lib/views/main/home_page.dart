@@ -1,13 +1,7 @@
-import 'dart:async';
-
+// home_page.dart
 import 'package:athena/api/book_api.dart';
-import 'package:athena/models/add_book.dart';
 import 'package:athena/models/list_book.dart';
-import 'package:athena/views/main/profile_page.dart';
-import 'package:athena/views/main/search_page.dart';
-import 'package:athena/widgets/book_grid.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,197 +11,157 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<BookDatum> _books = [];
-  bool _isLoading = true;
-  bool _isFetchingMore = false;
-  bool _hasMore = true;
-  String? _error;
-  int _page = 1;
-  final int _limit = 20;
-  final ScrollController _scrollController = ScrollController();
-
-  String? _userName;
+  late Future<ListBookItem?> _booksFuture;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
 
   @override
   void initState() {
     super.initState();
-    _loadUser();
-    _fetchBooks();
-    _scrollController.addListener(_onScroll);
+    _loadBooks();
   }
 
-  Future<void> _loadUser() async {
-    final prefs = await SharedPreferences.getInstance();
+  void _loadBooks() {
     setState(() {
-      _userName = prefs.getString('userName') ?? "Ilham"; // default jika kosong
+      _booksFuture = BookApi.getBooks(search: _searchQuery);
     });
   }
 
-  Future<void> _fetchBooks({bool loadMore = false}) async {
-    if (loadMore) {
-      setState(() => _isFetchingMore = true);
-    } else {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
-    }
-
-    try {
-      final response = await BookApi.getBooks(page: _page, limit: _limit);
-
-      if (response != null && response.data != null) {
-        setState(() {
-          if (loadMore) {
-            _books.addAll(response.data!);
-          } else {
-            _books = response.data!;
-          }
-          if (response.data!.length < _limit) _hasMore = false;
-        });
-      } else {
-        setState(() {
-          if (!loadMore) _error = "Tidak ada buku ditemukan";
-          _hasMore = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        if (!loadMore) _error = e.toString();
-      });
-    } finally {
-      if (loadMore) {
-        setState(() => _isFetchingMore = false);
-      } else {
-        setState(() => _isLoading = false);
-      }
-    }
+  void _onSearchChanged(String value) {
+    _searchQuery = value;
+    _loadBooks();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200 &&
-        !_isFetchingMore &&
-        _hasMore &&
-        !_isLoading) {
-      _page++;
-      _fetchBooks(loadMore: true);
-    }
-  }
-
-  // 🔹 Converter Data -> BookDatum
-  BookDatum convertDataToBookDatum(Data data) {
-    return BookDatum(
-      id: data.id,
-      title: data.title,
-      author: data.author,
-      stock: data.stock,
-      coverUrl:
-          "https://via.placeholder.com/300x400?text=${Uri.encodeComponent(data.title ?? 'Book')}",
-    );
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
+  Future<void> _refreshBooks() async {
+    _loadBooks();
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: CustomScrollView(
-        controller: _scrollController,
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: Colors.deepPurple.shade900,
-            expandedHeight: 60,
-            title: _buildSearchBar(context),
-          ),
-          SliverToBoxAdapter(
-            child: _isLoading
-                ? const BookGridShimmer()
-                : _error != null
-                ? SizedBox(
-                    height: 400,
-                    child: Center(
-                      child: Text(
-                        _error!,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  )
-                : BookGrid(books: _books),
-          ),
-          if (_isFetchingMore)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(
-                  child: CircularProgressIndicator(color: Colors.white),
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text('Perpustakaan Athena'),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Cari buku...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
                 ),
+                filled: true,
+                fillColor: Colors.white,
               ),
             ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refreshBooks,
+              child: FutureBuilder<ListBookItem?>(
+                future: _booksFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error, size: 50, color: Colors.red),
+                          const SizedBox(height: 16),
+                          Text('Error: ${snapshot.error}'),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadBooks,
+                            child: const Text('Coba Lagi'),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (!snapshot.hasData || snapshot.data!.data == null || snapshot.data!.data!.isEmpty) {
+                    return const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.book, size: 50, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text('Tidak ada buku tersedia'),
+                        ],
+                      ),
+                    );
+                  } else {
+                    final books = snapshot.data!.data!;
+                    return ListView.builder(
+                      itemCount: books.length,
+                      itemBuilder: (context, index) {
+                        final book = books[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: ListTile(
+                            leading: book.coverUrl != null
+                                ? Image.network(
+                                    book.coverUrl!,
+                                    width: 50,
+                                    height: 70,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: 50,
+                                        height: 70,
+                                        color: Colors.grey[300],
+                                        child: const Icon(Icons.book),
+                                      );
+                                    },
+                                  )
+                                : Container(
+                                    width: 50,
+                                    height: 70,
+                                    color: Colors.grey[300],
+                                    child: const Icon(Icons.book),
+                                  ),
+                            title: Text(book.title ?? 'No Title'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(book.author ?? 'Unknown Author'),
+                                Text('Stok: ${book.stock ?? 0}'),
+                              ],
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.info),
+                              onPressed: () {
+                                // Navigate to book details
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
+            ),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSearchBar(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const SearchPage()),
-        );
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(25),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.search, color: Colors.grey),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                "Cari buku...",
-                style: TextStyle(color: Colors.grey[700], fontSize: 14),
-              ),
-            ),
-            const SizedBox(width: 8),
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfileBody()),
-                );
-              },
-              borderRadius: BorderRadius.circular(27),
-              child: CircleAvatar(
-                radius: 15,
-                backgroundColor: Colors.blueGrey,
-                child: Text(
-                  _userName != null && _userName!.isNotEmpty
-                      ? _userName![0].toUpperCase()
-                      : "?",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _refreshBooks,
+        child: const Icon(Icons.refresh),
       ),
     );
   }

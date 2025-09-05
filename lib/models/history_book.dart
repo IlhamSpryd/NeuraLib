@@ -85,7 +85,7 @@ class Book {
   int? id;
   String? title;
   String? author;
-  String? stock;
+  int? stock; // ✅ Ubah dari String? menjadi int?
   DateTime? createdAt;
   DateTime? updatedAt;
 
@@ -93,7 +93,7 @@ class Book {
     this.id,
     this.title,
     this.author,
-    this.stock,
+    this.stock, // ✅ Sekarang int?
     this.createdAt,
     this.updatedAt,
   });
@@ -102,7 +102,8 @@ class Book {
     id: json["id"],
     title: json["title"],
     author: json["author"],
-    stock: json["stock"],
+    // ✅ FIX: Handle both String and int for stock
+    stock: _parseStock(json["stock"]),
     createdAt: json["created_at"] == null
         ? null
         : DateTime.parse(json["created_at"]),
@@ -110,6 +111,19 @@ class Book {
         ? null
         : DateTime.parse(json["updated_at"]),
   );
+
+  // ✅ Helper method untuk parse stock
+  static int? _parseStock(dynamic stockValue) {
+    if (stockValue == null) return null;
+
+    if (stockValue is int) {
+      return stockValue;
+    } else if (stockValue is String) {
+      return int.tryParse(stockValue);
+    } else {
+      return null;
+    }
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,

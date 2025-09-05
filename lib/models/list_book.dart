@@ -1,13 +1,8 @@
 // list_book.dart
-// To parse this JSON data, do
-//
-//     final listBook = listBookFromJson(jsonString);
-
 import 'dart:convert';
 
 ListBookItem listBookItemFromJson(String str) =>
     ListBookItem.fromJson(json.decode(str));
-
 String listBookItemToJson(ListBookItem data) => json.encode(data.toJson());
 
 class ListBookItem {
@@ -20,7 +15,7 @@ class ListBookItem {
     message: json["message"],
     data: json["data"] == null
         ? []
-        : List<BookDatum>.from(json["data"].map((x) => BookDatum.fromJson(x))),
+        : List<BookDatum>.from(json["data"]!.map((x) => BookDatum.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -35,7 +30,7 @@ class BookDatum {
   int? id;
   String? title;
   String? author;
-  int? stock;
+  int? stock; // ✅ Tetap int di model
   DateTime? createdAt;
   DateTime? updatedAt;
   String? coverUrl;
@@ -54,7 +49,8 @@ class BookDatum {
     id: json["id"],
     title: json["title"],
     author: json["author"],
-    stock: json["stock"],
+    // ✅ FIX: Handle both String and int for stock
+    stock: _parseStock(json["stock"]),
     createdAt: json["created_at"] == null
         ? null
         : DateTime.parse(json["created_at"]),
@@ -65,6 +61,19 @@ class BookDatum {
         ? "https://appperpus.mobileprojp.com/api${json["cover_url"]}"
         : null,
   );
+
+  // ✅ Helper method untuk parse stock
+  static int? _parseStock(dynamic stockValue) {
+    if (stockValue == null) return null;
+
+    if (stockValue is int) {
+      return stockValue;
+    } else if (stockValue is String) {
+      return int.tryParse(stockValue);
+    } else {
+      return null;
+    }
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,
