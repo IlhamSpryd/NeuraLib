@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:athena/api/authentication_api.dart';
+import 'package:flutter/material.dart';
 import 'package:athena/preference/shared_preferences.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -36,7 +36,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     setState(() => _isLoading = true);
 
     try {
-      final updatedUser = await AuthenticationAPI.updateUser(
+      final updatedUser = await AuthApi.updateUser(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
       );
@@ -52,7 +52,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           const SnackBar(content: Text("Profil berhasil diperbarui")),
         );
 
-        Navigator.pop(context, true); // balik ke ProfilePage dengan flag true
+        Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Gagal memperbarui profil")),

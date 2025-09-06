@@ -14,7 +14,11 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [HomePage(), AddEditBookPage(), ProfileBody()];
+  final List<Widget> _pages = [
+    const HomePage(),
+    const AddEditBookPage(),
+    const ProfileBody(),
+  ];
 
   @override
   Widget build(BuildContext context) {

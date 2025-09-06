@@ -1,16 +1,19 @@
-// history_api.dart
+// user_api.dart
 import 'dart:convert';
 import 'package:athena/preference/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'endpoint.dart';
-import '../models/history_book.dart';
+import '../models/user_models.dart';
 
-class HistoryApi {
+class UserApi {
   // 🔹 Header dengan token
-  static Future<Map<String, String>> _headers() async {
+  static Future<Map<String, String>> _headers({bool json = false}) async {
     final token = await SharedPreferencesHelper.getToken();
     if (token == null) throw Exception("No token found, please login first");
-    return {"Authorization": "Bearer $token"};
+    return {
+      if (json) "Content-Type": "application/json",
+      "Authorization": "Bearer $token",
+    };
   }
 
   // 🔹 General request handler
@@ -32,28 +35,32 @@ class HistoryApi {
     }
   }
 
-  // 🔹 Get history by user ID
-  static Future<HistoryBook?> getHistory(int userId) async {
+  // 🔹 Get user profile
+  static Future<UserModel?> getProfile() async {
     try {
       final response = await _request(() async {
-        return http.get(
-          Uri.parse(Endpoint.history(userId)),
-          headers: await _headers(),
-        );
+        return http.get(Uri.parse(Endpoint.profile), headers: await _headers());
       });
-      return historyBookFromJson(response.body);
+      return userModelFromJson(response.body);
     } catch (e) {
       rethrow;
     }
   }
 
-  // 🔹 Get current user's history
-  static Future<HistoryBook?> getMyHistory() async {
+  // 🔹 Update user profile
+  static Future<UserModel?> updateProfile({
+    required String name,
+    required String email,
+  }) async {
     try {
-      final userId = await SharedPreferencesHelper.getUserId();
-      if (userId == null) throw Exception("User ID not found");
-
-      return await getHistory(userId);
+      final response = await _request(() async {
+        return http.put(
+          Uri.parse(Endpoint.profile),
+          headers: await _headers(json: true),
+          body: jsonEncode({"name": name, "email": email}),
+        );
+      });
+      return userModelFromJson(response.body);
     } catch (e) {
       rethrow;
     }

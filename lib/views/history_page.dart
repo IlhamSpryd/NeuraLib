@@ -1,112 +1,118 @@
-// import 'package:athena/api/book_api.dart';
-// import 'package:athena/models/history_book.dart';
-// import 'package:flutter/material.dart';
-// import '../api/book_api.dart';
-// import '../models/history_book.dart';
+import 'package:athena/api/borrow_api.dart';
+import 'package:athena/api/history_api.dart';
+import 'package:athena/models/history_book.dart';
+import 'package:flutter/material.dart';
 
-// class HistoryPage extends StatefulWidget {
-//   const HistoryPage({super.key});
+class HistoryPage extends StatefulWidget {
+  const HistoryPage({super.key});
 
-//   @override
-//   State<HistoryPage> createState() => _HistoryPageState();
-// }
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
 
-// class _HistoryPageState extends State<HistoryPage> {
-//   late Future<List<HistoryBook>> _history;
+class _HistoryPageState extends State<HistoryPage> {
+  late Future<HistoryBook?> _historyFuture;
+  bool _isLoading = false;
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadHistory();
-//   }
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
 
-//   void _loadHistory() {
-//     _history = _fetchHistory();
-//   }
+  void _loadHistory() {
+    setState(() {
+      _historyFuture = HistoryApi.getMyHistory();
+    });
+  }
 
-//   Future<List<HistoryBook>> _fetchHistory() async {
-//     try {
-//       final history = await BookApi.getHistorySelf();
-//       return history?.data ?? [];
-//     } catch (e) {
-//       debugPrint("Error fetching history: $e");
-//       return [];
-//     }
-//   }
+  Future<void> _returnBook(int borrowId) async {
+    setState(() => _isLoading = true);
+    try {
+      await BorrowApi.returnBook(borrowId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Buku berhasil dikembalikan!")),
+      );
+      _loadHistory(); // Refresh history
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
-//   Future<void> _returnBook(int borrowId) async {
-//     try {
-//       await BookApi.returnBook(borrowId);
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(const SnackBar(content: Text("Book returned!")));
-//       setState(() => _loadHistory());
-//     } catch (e) {
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(SnackBar(content: Text("Error: $e")));
-//     }
-//   }
+  String _formatDate(DateTime? date) {
+    if (date == null) return '-';
+    return '${date.day}/${date.month}/${date.year}';
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text("Riwayat Pinjaman"),
-//         backgroundColor: Colors.blue,
-//         elevation: 0,
-//       ),
-//       body: FutureBuilder<List<HistoryBook>>(
-//         future: _history,
-//         builder: (context, snapshot) {
-//           if (snapshot.connectionState == ConnectionState.waiting) {
-//             return const Center(child: CircularProgressIndicator());
-//           } else if (snapshot.hasError) {
-//             return Center(child: Text("Error: ${snapshot.error}"));
-//           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-//             return const Center(child: Text("Tidak ada riwayat pinjaman"));
-//           } else {
-//             final history = snapshot.data!;
-//             return ListView.builder(
-//               itemCount: history.length,
-//               itemBuilder: (context, index) {
-//                 final item = history[index];
-//                 final isReturned = item.returnedAt != null;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Riwayat Pinjaman"),
+        backgroundColor: Colors.blue,
+        elevation: 0,
+      ),
+      body: FutureBuilder<HistoryBook?>(
+        future: _historyFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.data == null || snapshot.data!.data!.isEmpty) {
+            return const Center(child: Text("Tidak ada riwayat pinjaman"));
+          } else {
+            final historyData = snapshot.data!.data!;
 
-//                 return Card(
-//                   margin: const EdgeInsets.symmetric(
-//                     horizontal: 16,
-//                     vertical: 8,
-//                   ),
-//                   child: ListTile(
-//                     leading: Image.network(
-//                       item.book.cover ?? "https://picsum.photos/50/70",
-//                       width: 50,
-//                       fit: BoxFit.cover,
-//                     ),
-//                     title: Text(item.book.title),
-//                     subtitle: Column(
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         Text(item.book.author),
-//                         Text("Dipinjam: ${item.borrowedAt}"),
-//                         if (isReturned)
-//                           Text("Dikembalikan: ${item.returnedAt}"),
-//                       ],
-//                     ),
-//                     trailing: !isReturned
-//                         ? ElevatedButton(
-//                             onPressed: () => _returnBook(item.id),
-//                             child: const Text("Return"),
-//                           )
-//                         : const Icon(Icons.check, color: Colors.green),
-//                   ),
-//                 );
-//               },
-//             );
-//           }
-//         },
-//       ),
-//     );
-//   }
-// }
+            return RefreshIndicator(
+              onRefresh: () async {
+                _loadHistory();
+                await Future.delayed(const Duration(seconds: 1));
+              },
+              child: ListView.builder(
+                itemCount: historyData.length,
+                itemBuilder: (context, index) {
+                  final item = historyData[index];
+                  final isReturned = item.returnDate != null;
+
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: ListTile(
+                      title: Text(item.book?.title ?? 'Unknown Book'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.book?.author ?? 'Unknown Author'),
+                          Text("Dipinjam: ${_formatDate(item.borrowDate)}"),
+                          if (isReturned)
+                            Text("Dikembalikan: ${_formatDate(item.returnDate is DateTime ? item.returnDate as DateTime? : null)}"),
+                          if (!isReturned)
+                            const Text("Status: Belum dikembalikan", style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                      trailing: !isReturned && !_isLoading
+                          ? ElevatedButton(
+                              onPressed: () => _returnBook(item.id!),
+                              child: const Text("Kembalikan"),
+                            )
+                          : isReturned
+                              ? const Icon(Icons.check, color: Colors.green)
+                              : const CircularProgressIndicator(),
+                    ),
+                  );
+                },
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+}

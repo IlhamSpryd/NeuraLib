@@ -1,4 +1,5 @@
-// search_page.dart - Modern UI Design
+import 'package:athena/api/book_api.dart';
+import 'package:athena/models/list_book.dart';
 import 'package:athena/views/book_detail_page.dart';
 import 'package:flutter/material.dart';
 
@@ -11,24 +12,136 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _controller = TextEditingController();
-  List<String> _results = [];
+  List<BookDatum> _results = [];
+  bool _isLoading = false;
 
-  void _onSearch(String query) {
-    // sementara dummy data, nanti bisa ganti API integration
-    final allBooks = [
-      "Metode Penelitian Kuantitatif",
-      "Young Adult: A untuk Amanda",
-      "Belajar Machine Learning",
-      "Flutter for Beginners",
-      "Pemrograman Dart Lanjutan",
-      "AI dan Robotika Masa Depan",
-    ];
+  void _onSearch(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _results = [];
+      });
+      return;
+    }
 
-    setState(() {
-      _results = allBooks
-          .where((book) => book.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await BookApi.getBooks(search: query);
+
+      if (result != null && result.data != null) {
+        setState(() {
+          _results = result.data!;
+        });
+      } else {
+        setState(() {
+          _results = [];
+        });
+      }
+    } catch (e) {
+      print("Search error: $e");
+      setState(() {
+        _results = [];
+      });
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildBookCard(BookDatum book) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [Colors.white, Colors.grey[50]!]),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(16),
+          leading: book.coverUrl != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    book.coverUrl!,
+                    width: 50,
+                    height: 70,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 50,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.deepPurple[100]!,
+                              Colors.purple[100]!,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.book_rounded,
+                          color: Colors.deepPurple[300],
+                        ),
+                      );
+                    },
+                  ),
+                )
+              : Container(
+                  width: 50,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.deepPurple[100]!, Colors.purple[100]!],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.book_rounded,
+                    color: Colors.deepPurple[300],
+                  ),
+                ),
+          title: Text(
+            book.title ?? 'No Title',
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          subtitle: Text(
+            book.author ?? 'Unknown Author',
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.deepPurple,
+              size: 20,
+            ),
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BookDetailPage(
+                  bookId: book.id!,
+                  title: book.title ?? 'No Title',
+                  author: book.author ?? 'Unknown Author',
+                  stock: book.stock ?? 0,
+                  coverUrl: book.coverUrl,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -48,7 +161,7 @@ class _SearchPageState extends State<SearchPage> {
           style: const TextStyle(color: Colors.black87),
           cursorColor: Colors.deepPurple,
           decoration: InputDecoration(
-            hintText: "Cari buku, video, atau audio...",
+            hintText: "Cari buku...",
             hintStyle: TextStyle(color: Colors.grey[600]),
             border: InputBorder.none,
             prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
@@ -56,7 +169,27 @@ class _SearchPageState extends State<SearchPage> {
           onChanged: _onSearch,
         ),
       ),
-      body: _results.isEmpty
+      body: _isLoading
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.deepPurple,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text("Mencari...", style: TextStyle(color: Colors.grey[600])),
+                ],
+              ),
+            )
+          : _results.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -68,19 +201,17 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "Belum ada hasil pencarian",
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 16,
-                    ),
+                    _controller.text.isEmpty
+                        ? "Cari buku yang Anda inginkan"
+                        : "Tidak ada hasil pencarian",
+                    style: TextStyle(color: Colors.grey[500], fontSize: 16),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Coba kata kunci yang berbeda",
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 14,
-                    ),
+                    _controller.text.isEmpty
+                        ? "Ketik judul buku di atas"
+                        : "Coba kata kunci yang berbeda",
+                    style: TextStyle(color: Colors.grey[400], fontSize: 14),
                   ),
                 ],
               ),
@@ -88,61 +219,7 @@ class _SearchPageState extends State<SearchPage> {
           : ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 16),
               itemCount: _results.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.book_rounded,
-                        color: Colors.deepPurple[700],
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(
-                      _results[index],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    trailing: Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.grey[400],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BookDetailPage(
-                            title: _results[index],
-                            author: "Penulis Tidak Diketahui",
-                            coverUrl: "https://picsum.photos/200/300?random=$index",
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+              itemBuilder: (context, index) => _buildBookCard(_results[index]),
             ),
     );
   }

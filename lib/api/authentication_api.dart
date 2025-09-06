@@ -1,14 +1,13 @@
+// auth_api.dart
 import 'dart:convert';
-
-import 'package:athena/models/user_models.dart';
 import 'package:athena/preference/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'endpoint.dart';
+import '../models/user_models.dart';
 
-import 'endpoint.dart'; // pastikan file endpoint.dart lo import
-
-class AuthenticationAPI {
-  /// REGISTER USER
-  static Future<UserModel?> registerUser({
+class AuthApi {
+  // 🔹 Register user
+  static Future<UserModel?> register({
     required String name,
     required String email,
     required String password,
@@ -32,7 +31,6 @@ class AuthenticationAPI {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final user = userModelFromJson(response.body);
 
-        // Simpan token & userId
         await SharedPreferencesHelper.saveToken(user.data.token);
         await SharedPreferencesHelper.saveUser(
           id: user.data.user.id,
@@ -42,17 +40,15 @@ class AuthenticationAPI {
 
         return user;
       } else {
-        print("Register gagal: ${response.body}");
-        return null;
+        throw Exception("Register failed: ${response.body}");
       }
     } catch (e) {
-      print("Error registerUser: $e");
-      return null;
+      rethrow;
     }
   }
 
-  /// LOGIN USER
-  static Future<UserModel?> loginUser({
+  // 🔹 Login user
+  static Future<UserModel?> login({
     required String email,
     required String password,
   }) async {
@@ -69,7 +65,6 @@ class AuthenticationAPI {
       if (response.statusCode == 200) {
         final user = userModelFromJson(response.body);
 
-        // Simpan token & userId
         await SharedPreferencesHelper.saveToken(user.data.token);
         await SharedPreferencesHelper.saveUser(
           id: user.data.user.id,
@@ -79,45 +74,52 @@ class AuthenticationAPI {
 
         return user;
       } else {
-        print("Login gagal: ${response.body}");
-        return null;
+        throw Exception("Login failed: ${response.body}");
       }
     } catch (e) {
-      print("Error loginUser: $e");
-      return null;
+      rethrow;
     }
   }
 
-  /// LOGOUT USER
+  // 🔹 Logout
   static Future<void> logout() async {
-    await SharedPreferencesHelper.clearAll();
+    try {
+      final token = await SharedPreferencesHelper.getToken();
+      if (token != null) {
+        await http.post(
+          Uri.parse("${Endpoint.baseURL}/logout"),
+          headers: {"Authorization": "Bearer $token"},
+        );
+      }
+      await SharedPreferencesHelper.clearAll();
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  /// GET TOKEN / USER INFO
-  static Future<String?> getToken() async => SharedPreferencesHelper.getToken();
-  static Future<String?> getUserName() async =>
-      SharedPreferencesHelper.getUserName();
-  static Future<String?> getUserEmail() async =>
-      SharedPreferencesHelper.getUserEmail();
-  static Future<int?> getUserId() async => SharedPreferencesHelper.getUserId();
+  // 🔹 Get user profile
+  static Future<String?> getUserName() async {
+    return await SharedPreferencesHelper.getUserName();
+  }
 
-  /// UPDATE USER PROFILE
+  // 🔹 Get user email
+  static Future<String?> getUserEmail() async {
+    return await SharedPreferencesHelper.getUserEmail();
+  }
+
+  // 🔹 Update user profile
   static Future<UserModel?> updateUser({
     required String name,
     required String email,
   }) async {
     try {
-      final token = await getToken();
-      if (token == null) {
-        print("Token tidak tersedia");
-        return null;
-      }
+      final token = await SharedPreferencesHelper.getToken();
+      if (token == null) throw Exception("No token found");
 
       final response = await http.put(
-        Uri.parse(Endpoint.profile), // endpoint profile
+        Uri.parse(Endpoint.profile),
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
           "Authorization": "Bearer $token",
         },
         body: jsonEncode({"name": name, "email": email}),
@@ -126,7 +128,6 @@ class AuthenticationAPI {
       if (response.statusCode == 200) {
         final user = userModelFromJson(response.body);
 
-        // update SharedPreferences
         await SharedPreferencesHelper.saveUser(
           id: user.data.user.id,
           name: user.data.user.name,
@@ -135,12 +136,10 @@ class AuthenticationAPI {
 
         return user;
       } else {
-        print("Update profile gagal: ${response.body}");
-        return null;
+        throw Exception("Update failed: ${response.body}");
       }
     } catch (e) {
-      print("Error updateUser: $e");
-      return null;
+      rethrow;
     }
   }
 }

@@ -29,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final result = await AuthenticationAPI.loginUser(
+      final result = await AuthApi.login(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
@@ -47,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
         );
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => DashboardPage()),
+          MaterialPageRoute(builder: (context) => const DashboardPage()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -73,8 +73,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: Center(
@@ -202,7 +200,7 @@ class _LoginPageState extends State<LoginPage> {
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),

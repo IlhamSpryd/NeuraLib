@@ -32,16 +32,17 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadDarkModePreference();
   }
 
   Future<void> _loadUserProfile() async {
     try {
-      final name = await AuthenticationAPI.getUserName();
-      final email = await AuthenticationAPI.getUserEmail();
+      final name = await SharedPreferencesHelper.getUserName();
+      final email = await SharedPreferencesHelper.getUserEmail();
 
       setState(() {
-        _userName = name ?? "Guest";
-        _userEmail = email ?? "noemail@example.com";
+        _userName = name;
+        _userEmail = email;
         _isLoading = false;
       });
     } catch (e) {
@@ -50,6 +51,20 @@ class _SettingsPageState extends State<SettingsPage> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _loadDarkModePreference() async {
+    final isDark = await SharedPreferencesHelper.getDarkMode();
+    setState(() {
+      darkMode = isDark;
+    });
+  }
+
+  Future<void> _toggleDarkMode(bool value) async {
+    setState(() {
+      darkMode = value;
+    });
+    await SharedPreferencesHelper.setDarkMode(value);
   }
 
   String get slackLabel {
@@ -98,7 +113,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
     if (result != null) {
       setState(() => slackMode = result);
-      // bisa simpan ke SharedPreferences/API jika perlu
     }
   }
 
@@ -123,7 +137,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (confirm == true) {
-      await AuthenticationAPI.logout();
+      await AuthApi.logout();
       await SharedPreferencesHelper.clearAll();
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, "/login");
@@ -175,7 +189,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 title: Text(
                   _userName ?? "Guest",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(_userEmail ?? "noemail@example.com"),
                 trailing: IconButton(
@@ -184,7 +198,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const ProfileBody()),
-                    );
+                    ).then((_) => _loadUserProfile());
                   },
                 ),
               ),
@@ -206,9 +220,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: 'Dark Mode',
                 subtitle: 'Use dark theme for the app',
                 value: darkMode,
-                onChanged: (v) => setState(() => darkMode = v),
+                onChanged: _toggleDarkMode,
               ),
-              // bisa tambah pengaturan lain di sini
             ],
           ),
           const SizedBox(height: 16),
@@ -229,36 +242,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     'Receive push notifications on mentions and comments via your mobile app',
                 value: mobilePush,
                 onChanged: (v) => setState(() => mobilePush = v),
-              ),
-              SwitchTile(
-                title: 'Activity in your workspace',
-                subtitle: 'Receive emails for workspace activity',
-                value: activityWorkspace,
-                onChanged: (v) => setState(() => activityWorkspace = v),
-              ),
-              SwitchTile(
-                title: 'Always Email',
-                subtitle: 'Receive all emails regardless of activity',
-                value: alwaysEmail,
-                onChanged: (v) => setState(() => alwaysEmail = v),
-              ),
-              SwitchTile(
-                title: 'Page Updates',
-                subtitle: 'Receive emails when pages are updated',
-                value: pageUpdates,
-                onChanged: (v) => setState(() => pageUpdates = v),
-              ),
-              SwitchTile(
-                title: 'Workspace Digest',
-                subtitle: 'Receive weekly digest of workspace activity',
-                value: workspaceDigest,
-                onChanged: (v) => setState(() => workspaceDigest = v),
-              ),
-              SlackTile(
-                title: 'Slack notifications',
-                subtitle: 'Receive notifications in Slack when mentioned',
-                valueLabel: slackLabel,
-                onTap: _pickSlackMode,
               ),
             ],
           ),

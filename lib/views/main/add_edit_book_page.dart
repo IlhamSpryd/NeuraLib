@@ -1,14 +1,21 @@
-// add_edit_book_page.dart - FIXED VERSION
-import 'dart:io';
-
 import 'package:athena/api/book_api.dart';
-import 'package:athena/models/add_book.dart';
 import 'package:flutter/material.dart';
 
 class AddEditBookPage extends StatefulWidget {
-  final VoidCallback? onBookAdded; // ✅ JADIKAN OPTIONAL
+  final int? bookId;
+  final String? initialTitle;
+  final String? initialAuthor;
+  final int? initialStock;
+  final bool isEditMode;
 
-  const AddEditBookPage({super.key, this.onBookAdded});
+  const AddEditBookPage({
+    super.key,
+    this.bookId,
+    this.initialTitle,
+    this.initialAuthor,
+    this.initialStock,
+  }) : isEditMode = bookId != null;
+
   @override
   State<AddEditBookPage> createState() => _AddEditBookPageState();
 }
@@ -21,6 +28,17 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
   bool _isSaving = false;
 
   @override
+  void initState() {
+    super.initState();
+
+    if (widget.isEditMode) {
+      _titleController.text = widget.initialTitle ?? '';
+      _authorController.text = widget.initialAuthor ?? '';
+      _stockController.text = widget.initialStock?.toString() ?? '';
+    }
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _authorController.dispose();
@@ -29,104 +47,85 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
   }
 
   Future<void> _saveBook() async {
-    // ✅ VALIDATE FORM FIRST
     if (!_formKey.currentState!.validate()) {
-      print('❌ Form validation failed');
       return;
     }
 
     final stock = int.tryParse(_stockController.text);
     if (stock == null || stock < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Stok harus berupa angka >= 0")),
+        SnackBar(
+          content: const Text("Stok harus berupa angka >= 0"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       );
       return;
     }
 
-    print('💾 Saving book: ${_titleController.text}');
-
-    // ✅ SAFE SETSTATE - CHECK MOUNTED
-    if (!mounted) return;
     setState(() => _isSaving = true);
 
     try {
-      final AddBook? response = await BookApi.addBook(
-        title: _titleController.text.trim(),
-        author: _authorController.text.trim(),
-        stock: stock,
-      );
-
-      print("✅ API Response: ${response?.toJson()}");
-
-      // ✅ CRITICAL FIX: CHECK MOUNTED BEFORE ANY UI OPERATION
-      if (!mounted) {
-        print('⚠️ Widget not mounted, skipping UI operations');
-        return;
-      }
-
-      if (response != null && response.data != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Buku berhasil ditambahkan!")),
+      if (widget.isEditMode) {
+        final response = await BookApi.updateBook(
+          id: widget.bookId!,
+          title: _titleController.text.trim(),
+          author: _authorController.text.trim(),
+          stock: stock,
         );
 
-        // ✅ CLEAR FORM
-        _titleController.clear();
-        _authorController.clear();
-        _stockController.clear();
-
-        // ✅ WAIT FOR USER TO SEE SUCCESS MESSAGE
-        await Future.delayed(const Duration(milliseconds: 1500));
-
-        // ✅ SAFE NAVIGATION BACK
-        _navigateBack();
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Gagal menambahkan buku")));
-
-        // ✅ SAFE SETSTATE - CHECK MOUNTED
-        if (mounted) {
-          setState(() => _isSaving = false);
+        if (response != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text("Buku berhasil diperbarui!"),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+          Navigator.pop(context, true);
         }
-      }
-    } on SocketException {
-      // ✅ SAFE ERROR HANDLING
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Tidak ada koneksi internet")),
-      );
+      } else {
+        final response = await BookApi.addBook(
+          title: _titleController.text.trim(),
+          author: _authorController.text.trim(),
+          stock: stock,
+        );
 
-      if (mounted) {
-        setState(() => _isSaving = false);
+        if (response != null && response.data != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text("Buku berhasil ditambahkan!"),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+          Navigator.pop(context, true);
+        }
       }
     } catch (e) {
-      print('❌ Error saving book: $e');
-
-      // ✅ SAFE ERROR HANDLING
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
-
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: ${e.toString()}"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } finally {
       if (mounted) {
         setState(() => _isSaving = false);
       }
-    }
-  }
-
-  // ✅ NEW METHOD: SAFE NAVIGATION
-  void _navigateBack() {
-    if (mounted) {
-      // ✅ CLEAR FOCUS FIRST TO AVOID KEYBOARD ISSUES
-      FocusScope.of(context).unfocus();
-
-      // ✅ USE NAVIGATOR.MAYBEPOP FOR SAFETY
-      Navigator.maybePop(context).then((_) {
-        // ✅ SAFE SETSTATE AFTER NAVIGATION
-        if (mounted) {
-          setState(() => _isSaving = false);
-        }
-      });
     }
   }
 
@@ -142,26 +141,34 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
       controller: controller,
       keyboardType: type,
       obscureText: obscureText,
-      style: const TextStyle(color: Colors.black87, fontSize: 15),
+      style: const TextStyle(color: Colors.black87, fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.black54, fontSize: 14),
+        labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: Colors.grey)
+            ? Icon(prefixIcon, color: Colors.deepPurple)
             : null,
         filled: true,
         fillColor: Colors.white,
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.deepPurple, width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
+          horizontal: 16,
+          vertical: 16,
         ),
       ),
       validator: validator,
@@ -171,31 +178,26 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      resizeToAvoidBottomInset: true,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          "Tambah Buku",
-          style: TextStyle(
+        title: Text(
+          widget.isEditMode ? "Edit Buku" : "Tambah Buku",
+          style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 18,
             color: Colors.black87,
           ),
         ),
         backgroundColor: Colors.white,
-        elevation: 0.3,
+        elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black87),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // ✅ SAFE NAVIGATION BACK
-            _navigateBack();
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: GestureDetector(
-        // ✅ ADD TAP TO DISMISS KEYBOARD
         onTap: () => FocusScope.of(context).unfocus(),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -204,42 +206,63 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildTextField(
-                  controller: _titleController,
-                  label: "Judul Buku",
-                  validator: (val) => val == null || val.isEmpty
-                      ? "Judul tidak boleh kosong"
-                      : null,
-                  prefixIcon: Icons.book,
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _authorController,
-                  label: "Penulis",
-                  validator: (val) => val == null || val.isEmpty
-                      ? "Penulis tidak boleh kosong"
-                      : null,
-                  prefixIcon: Icons.person,
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _stockController,
-                  label: "Stok",
-                  type: TextInputType.number,
-                  validator: (val) => val == null || val.isEmpty
-                      ? "Stok tidak boleh kosong"
-                      : null,
-                  prefixIcon: Icons.confirmation_num,
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.white, Colors.grey[50]!],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildTextField(
+                          controller: _titleController,
+                          label: "Judul Buku",
+                          validator: (val) => val == null || val.isEmpty
+                              ? "Judul tidak boleh kosong"
+                              : null,
+                          prefixIcon: Icons.book_rounded,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _authorController,
+                          label: "Penulis",
+                          validator: (val) => val == null || val.isEmpty
+                              ? "Penulis tidak boleh kosong"
+                              : null,
+                          prefixIcon: Icons.person_rounded,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _stockController,
+                          label: "Stok",
+                          type: TextInputType.number,
+                          validator: (val) => val == null || val.isEmpty
+                              ? "Stok tidak boleh kosong"
+                              : null,
+                          prefixIcon: Icons.inventory_2_rounded,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 28),
                 ElevatedButton(
                   onPressed: _isSaving ? null : _saveBook,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    elevation: 2,
                   ),
                   child: _isSaving
                       ? const SizedBox(
@@ -250,11 +273,10 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          "Simpan",
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.white,
+                      : Text(
+                          widget.isEditMode ? "Update Buku" : "Tambah Buku",
+                          style: const TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
