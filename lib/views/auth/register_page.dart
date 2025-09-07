@@ -1,6 +1,7 @@
 import 'package:athena/api/authentication_api.dart';
 import 'package:athena/views/main/dashboard_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -49,6 +50,7 @@ class _RegisterPageState extends State<RegisterPage> {
           SnackBar(
             content: Text(
               "Registrasi sukses, selamat datang ${result.data.user.name}",
+              style: GoogleFonts.inter(color: Colors.white),
             ),
             backgroundColor: Colors.green,
           ),
@@ -59,8 +61,11 @@ class _RegisterPageState extends State<RegisterPage> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Registrasi gagal. Periksa inputan."),
+          SnackBar(
+            content: Text(
+              "Registrasi gagal. Periksa inputan.",
+              style: GoogleFonts.inter(color: Colors.white),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -69,7 +74,10 @@ class _RegisterPageState extends State<RegisterPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Terjadi kesalahan: $e"),
+          content: Text(
+            "Terjadi kesalahan: $e",
+            style: GoogleFonts.inter(color: Colors.white),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -82,8 +90,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final accentColor = theme.colorScheme.tertiary;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.colorScheme.surface,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -92,16 +104,19 @@ class _RegisterPageState extends State<RegisterPage> {
             children: [
               Text(
                 "Create Account",
-                style: TextStyle(
+                style: GoogleFonts.spaceGrotesk(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurpleAccent[700],
+                  color: primaryColor,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 "Daftar untuk melanjutkan",
-                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
               ),
               const SizedBox(height: 40),
 
@@ -110,13 +125,15 @@ class _RegisterPageState extends State<RegisterPage> {
                 key: _formKey,
                 child: Column(
                   children: [
+                    // Name
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
                         hintText: "Nama",
+                        hintStyle: GoogleFonts.inter(),
                         prefixIcon: const Icon(Icons.person_outline),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: theme.colorScheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 18,
                           horizontal: 20,
@@ -130,13 +147,16 @@ class _RegisterPageState extends State<RegisterPage> {
                           v == null || v.isEmpty ? "Nama wajib diisi" : null,
                     ),
                     const SizedBox(height: 16),
+
+                    // Email
                     TextFormField(
                       controller: _emailController,
                       decoration: InputDecoration(
                         hintText: "Email",
+                        hintStyle: GoogleFonts.inter(),
                         prefixIcon: const Icon(Icons.email_outlined),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: theme.colorScheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 18,
                           horizontal: 20,
@@ -158,11 +178,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
                     const SizedBox(height: 16),
+
+                    // Password
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: "Password",
+                        hintStyle: GoogleFonts.inter(),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -170,12 +193,14 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ? Icons.visibility_off
                                 : Icons.visibility,
                           ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: theme.colorScheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 18,
                           horizontal: 20,
@@ -190,11 +215,14 @@ class _RegisterPageState extends State<RegisterPage> {
                           : null,
                     ),
                     const SizedBox(height: 16),
+
+                    // Confirm Password
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
                       decoration: InputDecoration(
                         hintText: "Konfirmasi Password",
+                        hintStyle: GoogleFonts.inter(),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -202,13 +230,15 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ? Icons.visibility_off
                                 : Icons.visibility,
                           ),
-                          onPressed: () => setState(
-                            () => _obscureConfirmPassword =
-                                !_obscureConfirmPassword,
-                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
+                            });
+                          },
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: theme.colorScheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 18,
                           horizontal: 20,
@@ -219,10 +249,12 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       validator: (v) {
-                        if (v == null || v.isEmpty)
+                        if (v == null || v.isEmpty) {
                           return "Konfirmasi password wajib diisi";
-                        if (v != _passwordController.text)
+                        }
+                        if (v != _passwordController.text) {
                           return "Password tidak sama";
+                        }
                         return null;
                       },
                     ),
@@ -240,25 +272,22 @@ class _RegisterPageState extends State<RegisterPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
-                                padding: const EdgeInsets.all(0),
+                                padding: EdgeInsets.zero,
                                 elevation: 5,
                                 backgroundColor: Colors.transparent,
                               ),
                               child: Ink(
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Colors.deepPurple,
-                                      Colors.deepPurpleAccent,
-                                    ],
+                                  gradient: LinearGradient(
+                                    colors: [primaryColor, accentColor],
                                   ),
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                                 child: Container(
                                   alignment: Alignment.center,
-                                  child: const Text(
+                                  child: Text(
                                     "Register",
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
@@ -269,11 +298,16 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                           ),
                     const SizedBox(height: 16),
+
+                    // Login link
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text(
+                      child: Text(
                         "Sudah punya akun? Login",
-                        style: TextStyle(color: Colors.deepPurpleAccent),
+                        style: GoogleFonts.inter(
+                          color: accentColor,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],

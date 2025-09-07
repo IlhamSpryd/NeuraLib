@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
 class BookActionButtons extends StatelessWidget {
-  const BookActionButtons({super.key});
+  final VoidCallback onReadPressed;
+  final VoidCallback onFavoritePressed;
+  final bool isFavorite;
+
+  const BookActionButtons({
+    super.key,
+    required this.onReadPressed,
+    required this.onFavoritePressed,
+    this.isFavorite = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -9,9 +18,7 @@ class BookActionButtons extends StatelessWidget {
       children: [
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: () {
-              // aksi baca
-            },
+            onPressed: onReadPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepPurpleAccent,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -28,10 +35,11 @@ class BookActionButtons extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         IconButton(
-          onPressed: () {
-            // aksi favorit
-          },
-          icon: const Icon(Icons.favorite_border, color: Colors.white),
+          onPressed: onFavoritePressed,
+          icon: Icon(
+            isFavorite ? Icons.favorite : Icons.favorite_border,
+            color: isFavorite ? Colors.red : Colors.white,
+          ),
         ),
       ],
     );

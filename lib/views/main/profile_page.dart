@@ -1,3 +1,6 @@
+import 'package:athena/api/authentication_api.dart';
+import 'package:athena/api/user_api.dart';
+import 'package:athena/models/user_models.dart';
 import 'package:athena/preference/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +15,8 @@ class ProfileBody extends StatefulWidget {
 class _ProfileBodyState extends State<ProfileBody> {
   String? _userName;
   String? _userEmail;
+  UserModel? _userData;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -20,12 +25,72 @@ class _ProfileBodyState extends State<ProfileBody> {
   }
 
   Future<void> _loadProfileData() async {
-    final name = await SharedPreferencesHelper.getUserName();
-    final email = await SharedPreferencesHelper.getUserEmail();
-    setState(() {
-      _userName = name ?? "Pengguna";
-      _userEmail = email ?? "ilhamseptiyodi@gmail.com";
-    });
+    try {
+      final userData = await UserApi.getProfile();
+      if (userData != null) {
+        setState(() {
+          _userData = userData;
+          _userName = userData.data.user.name;
+          _userEmail = userData.data.user.email;
+          _isLoading = false;
+        });
+
+        await SharedPreferencesHelper.saveUser(
+          id: userData.data.user.id,
+          name: userData.data.user.name,
+          email: userData.data.user.email,
+        );
+      }
+    } catch (e) {
+      print("Error loading profile: $e");
+      // Fallback ke shared preferences
+      final name = await SharedPreferencesHelper.getUserName();
+      final email = await SharedPreferencesHelper.getUserEmail();
+      setState(() {
+        _userName = name ?? "Pengguna";
+        _userEmail = email ?? "Email tidak tersedia";
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _logout() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Logout"),
+          content: const Text("Apakah Anda yakin ingin keluar?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await AuthApi.logout();
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Logout gagal: ${e.toString()}"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text("Keluar", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _copyToClipboard(String text, String label) {
@@ -107,7 +172,12 @@ class _ProfileBodyState extends State<ProfileBody> {
             alignment: Alignment.centerRight,
             child: ElevatedButton(
               onPressed: () {
-                // TODO: Implement delete preview content
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Fitur hapus preview akan segera hadir"),
+                    backgroundColor: Colors.deepPurple,
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
@@ -149,7 +219,7 @@ class _ProfileBodyState extends State<ProfileBody> {
 
   @override
   Widget build(BuildContext context) {
-    if (_userName == null || _userEmail == null) {
+    if (_isLoading) {
       return Center(
         child: SizedBox(
           width: 40,
@@ -342,9 +412,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  onTap: () {
-                    // TODO: Implement logout
-                  },
+                  onTap: _logout,
                 ),
               ],
             ),
@@ -356,7 +424,7 @@ class _ProfileBodyState extends State<ProfileBody> {
             padding: const EdgeInsets.all(20),
             child: Center(
               child: Text(
-                "Versi 8.2.5",
+                "Versi 1.0",
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[500],

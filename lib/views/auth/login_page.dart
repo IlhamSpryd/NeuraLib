@@ -1,6 +1,7 @@
 import 'package:athena/api/authentication_api.dart';
 import 'package:athena/views/main/dashboard_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
           SnackBar(
             content: Text(
               "Login sukses, selamat datang ${result.data.user.name}",
+              style: GoogleFonts.inter(color: Colors.white),
             ),
             backgroundColor: Colors.green,
           ),
@@ -51,8 +53,11 @@ class _LoginPageState extends State<LoginPage> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Login gagal. Periksa email & password."),
+          SnackBar(
+            content: Text(
+              "Login gagal. Periksa email & password.",
+              style: GoogleFonts.inter(color: Colors.white),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -61,7 +66,10 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Terjadi kesalahan: $e"),
+          content: Text(
+            "Terjadi kesalahan: $e",
+            style: GoogleFonts.inter(color: Colors.white),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -73,8 +81,12 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final accentColor = theme.colorScheme.tertiary;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.colorScheme.surface,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -83,16 +95,19 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               Text(
                 "Welcome Back",
-                style: TextStyle(
+                style: GoogleFonts.spaceGrotesk(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurpleAccent[700],
+                  color: primaryColor,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 "Silahkan login untuk melanjutkan",
-                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
               ),
               const SizedBox(height: 40),
 
@@ -106,9 +121,10 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _emailController,
                       decoration: InputDecoration(
                         hintText: "Email",
+                        hintStyle: GoogleFonts.inter(),
                         prefixIcon: const Icon(Icons.email_outlined),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: theme.colorScheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 18,
                           horizontal: 20,
@@ -137,6 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: "Password",
+                        hintStyle: GoogleFonts.inter(),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -145,13 +162,13 @@ class _LoginPageState extends State<LoginPage> {
                                 : Icons.visibility,
                           ),
                           onPressed: () {
-                            setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            );
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
                           },
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: theme.colorScheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 18,
                           horizontal: 20,
@@ -179,25 +196,22 @@ class _LoginPageState extends State<LoginPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
-                                padding: const EdgeInsets.all(0),
+                                padding: EdgeInsets.zero,
                                 elevation: 5,
                                 backgroundColor: Colors.transparent,
                               ),
                               child: Ink(
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Colors.deepPurple,
-                                      Colors.deepPurpleAccent,
-                                    ],
+                                  gradient: LinearGradient(
+                                    colors: [primaryColor, accentColor],
                                   ),
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                                 child: Container(
                                   alignment: Alignment.center,
-                                  child: const Text(
+                                  child: Text(
                                     "Login",
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
@@ -213,9 +227,13 @@ class _LoginPageState extends State<LoginPage> {
                     TextButton(
                       onPressed: () =>
                           Navigator.pushNamed(context, "/register"),
-                      child: const Text(
+                      child: Text(
                         "Belum punya akun? Register",
-                        style: TextStyle(color: Colors.deepPurpleAccent),
+                        style: GoogleFonts.inter(
+                          color: Color.fromRGBO(32, 99, 155, 1),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
                   ],

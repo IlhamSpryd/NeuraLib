@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 class BookDescription extends StatelessWidget {
   final String title;
   final String author;
+  final String description;
 
-  const BookDescription({super.key, required this.title, required this.author});
+  const BookDescription({
+    super.key,
+    required this.title,
+    required this.author,
+    this.description = '',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +27,7 @@ class BookDescription extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          "Oleh $author",
+          "Karya $author",
           style: TextStyle(color: Colors.grey[400], fontSize: 14),
         ),
         const SizedBox(height: 20),
@@ -35,10 +41,12 @@ class BookDescription extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          "Buku ini membahas topik mendalam mengenai subjek yang relevan. "
-          "Kontennya disusun agar mudah dipahami baik oleh pemula maupun pembaca berpengalaman. "
-          "Dengan penjelasan yang detail, contoh nyata, dan pendekatan interaktif, "
-          "pembaca akan mendapatkan wawasan yang lebih luas.",
+          description.isNotEmpty
+              ? description
+              : "Buku ini membahas topik mendalam mengenai subjek yang relevan. "
+                    "Kontennya disusun agar mudah dipahami baik oleh pemula maupun pembaca berpengalaman. "
+                    "Dengan penjelasan yang detail, contoh nyata, dan pendekatan interaktif, "
+                    "pembaca akan mendapatkan wawasan yang lebih luas.",
           style: TextStyle(color: Colors.grey[300], fontSize: 14, height: 1.4),
         ),
       ],

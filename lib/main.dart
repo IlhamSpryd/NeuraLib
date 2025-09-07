@@ -1,98 +1,102 @@
 import 'package:athena/views/auth/login_page.dart';
+import 'package:athena/views/auth/register_page.dart';
 import 'package:athena/views/edit_profile.dart';
 import 'package:athena/views/main/dashboard_page.dart';
+import 'package:athena/views/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AthenaApp());
+  runApp(const NeuraLibApp());
 }
 
-class AthenaApp extends StatelessWidget {
-  const AthenaApp({super.key});
+class NeuraLibApp extends StatelessWidget {
+  const NeuraLibApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Athena Library',
+      title: 'NeuraLib',
       debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.system,
       theme: ThemeData(
-        // Hapus primarySwatch dan gunakan colorScheme saja
+        useMaterial3: true,
+        brightness: Brightness.light,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          primary: Colors.deepPurple,
-          secondary: Colors.purple,
-          background: const Color(0xFFF5F5F5),
+          seedColor: const Color.fromRGBO(32, 99, 155, 1),
+          primary: const Color.fromRGBO(32, 99, 155, 1),
+          secondary: const Color.fromRGBO(0, 210, 190, 1),
+          tertiary: const Color.fromRGBO(138, 43, 226, 1),
+          background: const Color.fromRGBO(245, 245, 245, 1),
           surface: Colors.white,
-          // Tambahkan brightness
           brightness: Brightness.light,
         ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          foregroundColor: Colors.black87,
-          titleTextStyle: TextStyle(
+        textTheme: TextTheme(
+          displayLarge: GoogleFonts.spaceGrotesk(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+          titleLarge: GoogleFonts.spaceGrotesk(
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: Colors.black87,
           ),
-          iconTheme: IconThemeData(color: Colors.black87),
-          surfaceTintColor: Colors.white,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepPurple,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+          bodyLarge: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+          bodyMedium: GoogleFonts.inter(fontSize: 14, color: Colors.black87),
+          labelLarge: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
           ),
         ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.deepPurple,
-            textStyle: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.red),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.red, width: 2),
-          ),
-        ),
-        useMaterial3: true,
       ),
-      home: const AuthWrapper(),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromRGBO(32, 99, 155, 1),
+          primary: const Color.fromRGBO(32, 99, 155, 1),
+          secondary: const Color.fromRGBO(0, 210, 190, 1),
+          tertiary: const Color.fromRGBO(138, 43, 226, 1),
+          background: const Color.fromRGBO(15, 23, 42, 1),
+          surface: const Color.fromRGBO(26, 32, 44, 1),
+          brightness: Brightness.dark,
+        ),
+        textTheme: TextTheme(
+          displayLarge: GoogleFonts.spaceGrotesk(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          titleLarge: GoogleFonts.spaceGrotesk(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+          bodyLarge: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+          bodyMedium: GoogleFonts.inter(fontSize: 14, color: Colors.white70),
+          labelLarge: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+        ),
+      ),
+      home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginPage(),
+        '/register': (context) => const RegisterPage(),
         '/dashboard': (context) => const DashboardPage(),
         '/edit_profile': (context) => const EditProfilePage(),
       },
@@ -144,7 +148,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
             height: 40,
             child: CircularProgressIndicator(
               strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Color.fromRGBO(32, 99, 155, 1),
+              ),
             ),
           ),
         ),

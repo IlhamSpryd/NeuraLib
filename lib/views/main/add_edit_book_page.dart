@@ -7,6 +7,7 @@ class AddEditBookPage extends StatefulWidget {
   final String? initialAuthor;
   final int? initialStock;
   final bool isEditMode;
+  final VoidCallback? onBookUpdated;
 
   const AddEditBookPage({
     super.key,
@@ -14,6 +15,7 @@ class AddEditBookPage extends StatefulWidget {
     this.initialTitle,
     this.initialAuthor,
     this.initialStock,
+    this.onBookUpdated,
   }) : isEditMode = bookId != null;
 
   @override
@@ -88,6 +90,9 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
               ),
             ),
           );
+          if (widget.onBookUpdated != null) {
+            widget.onBookUpdated!();
+          }
           Navigator.pop(context, true);
         }
       } else {
@@ -108,6 +113,9 @@ class _AddEditBookPageState extends State<AddEditBookPage> {
               ),
             ),
           );
+          if (widget.onBookUpdated != null) {
+            widget.onBookUpdated!();
+          }
           Navigator.pop(context, true);
         }
       }

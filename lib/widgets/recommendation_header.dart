@@ -13,7 +13,7 @@ class RecommendationHeader extends StatelessWidget {
           const Text(
             "Rekomendasi untuk Anda",
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
@@ -22,8 +22,8 @@ class RecommendationHeader extends StatelessWidget {
             onPressed: () {},
             style: TextButton.styleFrom(foregroundColor: Colors.deepPurple),
             child: const Text(
-              "Lihat Semua",
-              style: TextStyle(fontWeight: FontWeight.w500),
+              "selengkapnya",
+              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
             ),
           ),
         ],

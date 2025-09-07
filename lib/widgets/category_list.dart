@@ -17,7 +17,7 @@ class CategoryList extends StatelessWidget {
       height: 60,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         children: categories.map((category) {
           return _CategoryButton(
             icon: category["icon"],
@@ -45,29 +45,45 @@ class _CategoryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
-        color: isActive ? Colors.deepPurple : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        gradient: isActive
+            ? const LinearGradient(
+                colors: [Color(0xFF673AB7), Color(0xFF7C4DFF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: isActive ? null : Colors.white,
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: isActive ? Colors.deepPurple : Colors.grey[300]!,
+          color: isActive ? Colors.transparent : Colors.grey[300]!,
         ),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: Colors.deepPurple.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            size: 16,
-            color: isActive ? Colors.white : Colors.deepPurple,
+            size: 18,
+            color: isActive ? Colors.white : const Color(0xFF673AB7),
           ),
           const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
-              color: isActive ? Colors.white : Colors.deepPurple,
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
+              color: isActive ? Colors.white : const Color(0xFF673AB7),
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
             ),
           ),
         ],

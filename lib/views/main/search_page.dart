@@ -39,6 +39,12 @@ class _SearchPageState extends State<SearchPage> {
       }
     } catch (e) {
       print("Search error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Pencarian gagal: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
       setState(() {
         _results = [];
       });
