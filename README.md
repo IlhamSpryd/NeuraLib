@@ -1,4 +1,4 @@
-# athena
+# NeuraLib
 
 A new Flutter project.
 
