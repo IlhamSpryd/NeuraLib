@@ -1,13 +1,13 @@
-import 'dart:math' as math;
-
 import 'package:athena/api/book_api.dart';
 import 'package:athena/api/borrow_api.dart';
 import 'package:athena/models/list_book.dart';
+import 'package:athena/preference/shared_preferences.dart';
+import 'package:athena/views/book_detail_page.dart';
 import 'package:athena/views/main/add_edit_book_page.dart';
+import 'package:athena/views/main/search_page.dart';
 import 'package:athena/views/settings_page.dart';
 import 'package:athena/widgets/book_grid.dart';
 import 'package:athena/widgets/carousel_banner.dart' as carousel;
-import 'package:athena/widgets/category_list.dart' as category;
 import 'package:athena/widgets/recommendation_header.dart' as recommendation;
 import 'package:flutter/material.dart';
 
@@ -22,6 +22,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late Future<ListBookItem?> _booksFuture;
   final TextEditingController _searchTextController = TextEditingController();
   String _searchQuery = "";
+  String? _userName;
+  String? _userEmail;
 
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
@@ -29,7 +31,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // Animation Controllers
   late AnimationController _fadeController;
   late AnimationController _slideController;
-  late AnimationController _searchAnimationController; // Diubah namanya
+  late AnimationController _searchAnimationController;
   late AnimationController _floatingController;
   late AnimationController _pulseController;
 
@@ -56,7 +58,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
 
     _searchAnimationController = AnimationController(
-      // Diubah namanya
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
@@ -85,7 +86,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       CurvedAnimation(
         parent: _searchAnimationController,
         curve: Curves.bounceOut,
-      ), // Diubah referensi
+      ),
     );
 
     _floatingAnimation = Tween<double>(begin: -5.0, end: 5.0).animate(
@@ -99,21 +100,44 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // Start animations
     _fadeController.forward();
     _slideController.forward();
-    _searchAnimationController.forward(); // Diubah referensi
+    _searchAnimationController.forward();
     _floatingController.repeat(reverse: true);
     _pulseController.repeat(reverse: true);
 
     _loadBooks();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final userName = await SharedPreferencesHelper.getUserName();
+      final userEmail = await SharedPreferencesHelper.getUserEmail();
+
+      if (mounted) {
+        setState(() {
+          _userName = userName ?? 'User';
+          _userEmail = userEmail;
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+      if (mounted) {
+        setState(() {
+          _userName = 'User';
+          _userEmail = null;
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
     _slideController.dispose();
-    _searchAnimationController.dispose(); // Diubah referensi
+    _searchAnimationController.dispose();
     _floatingController.dispose();
     _pulseController.dispose();
-    _searchTextController.dispose(); // Diubah referensi
+    _searchTextController.dispose();
     super.dispose();
   }
 
@@ -128,8 +152,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _loadBooks();
   }
 
+  void _navigateToSearchPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SearchPage()),
+    );
+  }
+
   Future<void> _refreshBooks() async {
     _loadBooks();
+    await _loadUserData();
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
@@ -137,7 +169,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     try {
       final result = await BorrowApi.borrowBook(bookId);
 
-      if (result != null) {
+      if (result != null && mounted) {
         _refreshBooks();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -171,7 +203,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            backgroundColor: const Color(0xFF00D2BE),
+            backgroundColor: Theme.of(context).colorScheme.secondary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -182,42 +214,88 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.error, color: Colors.white, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Gagal meminjam: ${e.toString()}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            margin: const EdgeInsets.all(20),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteBook(int bookId, String bookTitle) async {
+    try {
+      final result = await BookApi.deleteBook(bookId);
+
+      if (result != null && mounted) {
+        _refreshBooks();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Berhasil menghapus "$bookTitle"',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            margin: const EdgeInsets.all(20),
+            duration: const Duration(seconds: 2),
           ),
-          backgroundColor: Colors.red.shade400,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menghapus buku: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            margin: const EdgeInsets.all(20),
+            duration: const Duration(seconds: 3),
           ),
-          margin: const EdgeInsets.all(20),
-          duration: const Duration(seconds: 3),
-        ),
-      );
+        );
+      }
     }
   }
 
@@ -235,11 +313,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
+          const endPoint = Offset.zero;
           const curve = Curves.easeInOut;
           var tween = Tween(
             begin: begin,
-            end: end,
+            end: endPoint,
           ).chain(CurveTween(curve: curve));
           return SlideTransition(
             position: animation.drive(tween),
@@ -252,6 +330,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         _refreshBooks();
       }
     });
+  }
+
+  void _navigateToBookDetail(BookDatum book) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookDetailPage(
+          bookId: book.id!,
+          title: book.title ?? 'Unknown Title',
+          author: book.author ?? 'Unknown Author',
+          stock: book.stock ?? 0,
+        ),
+      ),
+    );
   }
 
   void _navigateToAddBook() {
@@ -277,51 +369,60 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF20639B), Color(0xFF00D2BE)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF20639B).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+    return SizedBox(
+      height: 200,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.secondary,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
-            ),
-            child: const CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ),
-          const SizedBox(height: 24),
-          AnimatedBuilder(
-            animation: _pulseAnimation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _pulseAnimation.value,
-                child: const Text(
-                  'Memuat data neural...',
-                  style: TextStyle(
-                    color: Color(0xFF20639B),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    letterSpacing: 0.5,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
-                ),
-              );
-            },
-          ),
-        ],
+                ],
+              ),
+              child: const CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+            const SizedBox(height: 16),
+            AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _pulseAnimation.value,
+                  child: Text(
+                    'Memuat data neural...',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -331,160 +432,174 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     if (error.toString().contains("No token found")) {
       errorMessage = "Sesi neural telah berakhir";
-    } else if (error.toString().contains("HTTP")) {
-      errorMessage = "Koneksi server terputus";
+    } else if (error.toString().contains("HTTP") ||
+        error.toString().contains("FormatException")) {
+      errorMessage = "Koneksi server bermasalah";
     }
 
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.red.shade50, Colors.red.shade100.withOpacity(0.5)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.red.shade50, Colors.red.shade100.withOpacity(0.5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.error_outline_rounded,
+              size: 40,
+              color: Colors.red.shade600,
+            ),
           ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.red.shade200),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.error_outline_rounded,
-                size: 40,
-                color: Colors.red.shade600,
-              ),
+          const SizedBox(height: 16),
+          Text(
+            errorMessage,
+            style: TextStyle(
+              color: Colors.red.shade700,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
             ),
-            const SizedBox(height: 16),
-            Text(
-              errorMessage,
-              style: TextStyle(
-                color: Colors.red.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Sistem neural mengalami gangguan',
+            style: TextStyle(color: Colors.red.shade600, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              textAlign: TextAlign.center,
+              elevation: 0,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Sistem neural mengalami gangguan',
-              style: TextStyle(color: Colors.red.shade600, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+            onPressed: _loadBooks,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.refresh, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  "Reconnect",
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              onPressed: _loadBooks,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.refresh, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    "Reconnect",
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              const Color(0xFF20639B).withOpacity(0.05),
-              const Color(0xFF00D2BE).withOpacity(0.05),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFF20639B).withOpacity(0.1)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedBuilder(
-              animation: _floatingAnimation,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _floatingAnimation.value),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF20639B), Color(0xFF00D2BE)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF20639B).withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.auto_stories_rounded,
-                      size: 48,
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Neural Library Empty',
-              style: TextStyle(
-                color: Color(0xFF20639B),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Inisialisasi perpustakaan neural\ndengan menambahkan buku pertama',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.05),
+            Theme.of(context).colorScheme.secondary.withOpacity(0.05),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedBuilder(
+            animation: _floatingAnimation,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, _floatingAnimation.value),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.secondary,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.auto_stories_rounded,
+                    size: 48,
+                    color: Colors.white,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Neural Library Empty',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Inisialisasi perpustakaan neural\ndengan menambahkan buku pertama',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _navigateToAddBook,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: const Text('Tambah Buku Pertama'),
+          ),
+        ],
       ),
     );
   }
@@ -492,18 +607,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToAddBook,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add_rounded),
+      ),
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: _refreshBooks,
-        color: const Color(0xFF20639B),
-        backgroundColor: Colors.white,
+        color: Theme.of(context).colorScheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // Futuristic App Bar
+            // Modern App Bar dengan tinggi yang lebih optimal
             SliverAppBar(
-              expandedHeight: 120,
+              expandedHeight: 180, // Increased height to prevent overflow
               floating: true,
               pinned: true,
               backgroundColor: Colors.transparent,
@@ -531,75 +653,149 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         ),
                         child: SafeArea(
                           child: Padding(
-                            padding: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 30,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
+                                // Header dengan Hello dan Avatar
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.auto_stories_rounded,
-                                        color: Colors.white,
-                                        size: 24,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'NeuraLib',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    _buildActionButton(
-                                      icon: Icons.add_rounded,
-                                      onPressed: _navigateToAddBook,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _buildActionButton(
-                                      icon: Icons.settings_rounded,
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          PageRouteBuilder(
-                                            pageBuilder:
-                                                (
-                                                  context,
-                                                  animation,
-                                                  secondaryAnimation,
-                                                ) => const SettingsPage(),
-                                            transitionsBuilder:
-                                                (
-                                                  context,
-                                                  animation,
-                                                  secondaryAnimation,
-                                                  child,
-                                                ) {
-                                                  return FadeTransition(
-                                                    opacity: animation,
-                                                    child: child,
-                                                  );
-                                                },
+                                    // Teks dalam Flexible untuk mencegah overflow
+                                    Flexible(
+                                      child: Row(
+                                        children: [
+                                          const Text(
+                                            'Hello, ',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 25, // Reduced font size
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                        );
-                                      },
+                                          Flexible(
+                                            child: Text(
+                                              _userName ?? 'User',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize:
+                                                    25, // Reduced font size
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
-                                    _buildActionButton(
-                                      icon: Icons.refresh_rounded,
-                                      onPressed: _refreshBooks,
+
+                                    // Circle Avatar
+                                    GestureDetector(
+                                      onTap: () {
+                                        _showUserMenu(context);
+                                      },
+                                      child: Container(
+                                        width: 45, // Slightly smaller
+                                        height: 45, // Slightly smaller
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white.withOpacity(0.2),
+                                          border: Border.all(
+                                            color: Colors.white.withOpacity(
+                                              0.3,
+                                            ),
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: _userName != null
+                                            ? CircleAvatar(
+                                                backgroundColor: const Color(
+                                                  0xFF00D2BE,
+                                                ),
+                                                child: Text(
+                                                  _userName![0].toUpperCase(),
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              )
+                                            : const CircleAvatar(
+                                                backgroundColor: Color(
+                                                  0xFF20639B,
+                                                ),
+                                                child: Icon(
+                                                  Icons.person,
+                                                  color: Colors.white,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                      ),
                                     ),
                                   ],
+                                ),
+                                const SizedBox(height: 25),
+
+                                // Search Bar - Simplified version
+                                GestureDetector(
+                                  onTap: _navigateToSearchPage,
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(50),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [
+                                                  Color(0xFF20639B),
+                                                  Color(0xFF00D2BE),
+                                                ],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(50),
+                                            ),
+                                            child: const Icon(
+                                              Icons.search_rounded,
+                                              color: Colors.white,
+                                              size: 18,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Cari buku...',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -611,89 +807,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
             ),
-
-            // Search Bar
-            SliverToBoxAdapter(
-              child: AnimatedBuilder(
-                animation: _searchAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _searchAnimation.value,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF20639B).withOpacity(0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: TextField(
-                          controller: _searchTextController, // Diubah referensi
-                          onChanged: _onSearchChanged,
-                          decoration: InputDecoration(
-                            hintText: 'Pencarian neural...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 16,
-                            ),
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.all(8),
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF20639B),
-                                    Color(0xFF00D2BE),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.search_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
             // Carousel Banner
             SliverToBoxAdapter(
               child: SlideTransition(
                 position: _slideAnimation,
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 0),
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                   child: carousel.CategoryList(),
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-            // Category List
-            SliverToBoxAdapter(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: category.CategoryList(),
                 ),
               ),
             ),
@@ -734,6 +854,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         books: books,
                         onBorrow: _borrowBook,
                         onEdit: _navigateToEditBook,
+                        onDelete: _deleteBook,
                       ),
                     );
                   }
@@ -741,29 +862,99 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 50)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.white, size: 20),
-        onPressed: onPressed,
-        splashRadius: 20,
-      ),
+  void _showUserMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          margin: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.person,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text('Profil Saya'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.settings,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text('Pengaturan'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text('Keluar'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
+  }
+}
+
+// Delegate untuk sticky search bar
+class _StickySearchBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _StickySearchBarDelegate({required this.child});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  double get maxExtent => 60;
+
+  @override
+  double get minExtent => 60;
+
+  @override
+  bool shouldRebuild(_StickySearchBarDelegate oldDelegate) {
+    return child != oldDelegate.child;
   }
 }
 
@@ -811,99 +1002,51 @@ class _FuturisticBookGridShimmerState extends State<FuturisticBookGridShimmer>
         childAspectRatio: 0.7,
       ),
       padding: const EdgeInsets.all(20),
-      itemCount: 6,
+      itemCount: 4,
       itemBuilder: (context, index) {
-        return AnimatedBuilder(
-          animation: _shimmerAnimation,
-          builder: (context, child) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            height: 120,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            height: 16,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 12,
-                            width: 100,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            height: 14,
-                            width: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              Colors.white.withOpacity(0.8),
-                              Colors.transparent,
-                            ],
-                            stops: const [0.0, 0.5, 1.0],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            transform: GradientRotation(
-                              _shimmerAnimation.value * math.pi / 4,
-                            ),
-                          ),
-                        ),
-                        transform: Matrix4.translationValues(
-                          _shimmerAnimation.value * 200,
-                          0,
-                          0,
-                        ),
-                      ),
-                    ),
-                  ],
+            ],
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 120,
+                  width: double.infinity,
+                  child: ColoredBox(color: Colors.grey),
                 ),
-              ),
-            );
-          },
+                SizedBox(height: 12),
+                SizedBox(
+                  height: 16,
+                  width: double.infinity,
+                  child: ColoredBox(color: Colors.grey),
+                ),
+                SizedBox(height: 8),
+                SizedBox(
+                  height: 12,
+                  width: 100,
+                  child: ColoredBox(color: Colors.grey),
+                ),
+                Spacer(),
+                SizedBox(
+                  height: 14,
+                  width: 60,
+                  child: ColoredBox(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

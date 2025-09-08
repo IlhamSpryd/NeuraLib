@@ -36,6 +36,10 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() => _isLoading = false);
   }
 
+  void _onItemTapped(int index) {
+    setState(() => _currentIndex = index);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -52,54 +56,116 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
+      extendBody: true,
       body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.grey[50],
-        selectedItemColor: Colors.black,
-        items: [
-          BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 25,
-              height: 24,
-              child: Image.asset("assets/images/home1.png"),
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+        height: 70,
+        decoration: BoxDecoration(
+          color: const Color(0xFF2D2D2D),
+          borderRadius: BorderRadius.circular(35),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-            activeIcon: SizedBox(
-              width: 25,
-              height: 24,
-              child: Image.asset("assets/images/home.png"),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Home Tab
+            GestureDetector(
+              onTap: () => _onItemTapped(0),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: _currentIndex == 0 ? Colors.white : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: Image.asset(
+                      _currentIndex == 0
+                          ? "assets/images/home.png"
+                          : "assets/images/home1.png",
+                      width: 22,
+                      height: 22,
+                      color: _currentIndex == 0
+                          ? const Color(0xFF2D2D2D)
+                          : Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 30,
-              height: 24,
-              child: Image.asset("assets/images/add1.png"),
+
+            // Add Tab
+            GestureDetector(
+              onTap: () => _onItemTapped(1),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: _currentIndex == 1 ? Colors.white : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 22,
+                    child: Image.asset(
+                      _currentIndex == 1
+                          ? "assets/images/add.png"
+                          : "assets/images/add1.png",
+                      width: 24,
+                      height: 22,
+                      color: _currentIndex == 1
+                          ? const Color(0xFF2D2D2D)
+                          : Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            activeIcon: SizedBox(
-              width: 30,
-              height: 24,
-              child: Image.asset("assets/images/add.png"),
+
+            // Profile Tab
+            GestureDetector(
+              onTap: () => _onItemTapped(2),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: _currentIndex == 2 ? Colors.white : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: Image.asset(
+                      _currentIndex == 2
+                          ? "assets/images/user1.png"
+                          : "assets/images/user.png",
+                      width: 22,
+                      height: 22,
+                      color: _currentIndex == 2
+                          ? const Color(0xFF2D2D2D)
+                          : Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 25,
-              height: 24,
-              child: Image.asset("assets/images/user.png"),
-            ),
-            activeIcon: SizedBox(
-              width: 25,
-              height: 24,
-              child: Image.asset("assets/images/user1.png"),
-            ),
-            label: "",
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
