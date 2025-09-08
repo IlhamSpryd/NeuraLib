@@ -81,10 +81,20 @@ class _SplashScreenState extends State<SplashScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Bisa diganti dengan logo SVG/PNG
-                Icon(
-                  Icons.auto_awesome, // Placeholder icon
-                  size: 80,
-                  color: primaryColor,
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [primaryColor, accentColor],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.menu_book_rounded,
+                    size: 50,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -92,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen>
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
-                    color: accentColor,
+                    color: primaryColor,
                   ),
                 ),
                 const SizedBox(height: 8),

@@ -2,109 +2,47 @@ import 'package:athena/models/list_book.dart';
 import 'package:athena/views/book_detail_page.dart';
 import 'package:flutter/material.dart';
 
-class BookGrid extends StatefulWidget {
+class BookGrid extends StatelessWidget {
   final List<BookDatum> books;
   final Function(int, String) onBorrow;
   final Function(BookDatum) onEdit;
-  final Function(int, String) onDelete; // Tambahkan callback untuk delete
+  final Function(int, String) onDelete;
 
   const BookGrid({
     super.key,
     required this.books,
     required this.onBorrow,
     required this.onEdit,
-    required this.onDelete, // Tambahkan parameter onDelete
+    required this.onDelete,
   });
 
   @override
-  State<BookGrid> createState() => _BookGridState();
-}
-
-class _BookGridState extends State<BookGrid> with TickerProviderStateMixin {
-  late AnimationController _staggerController;
-  late List<Animation<double>> _cardAnimations;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _staggerController = AnimationController(
-      duration: Duration(milliseconds: 100 * widget.books.length),
-      vsync: this,
-    );
-
-    _cardAnimations = List.generate(
-      widget.books.length,
-      (index) => Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _staggerController,
-          curve: Interval(
-            index / widget.books.length,
-            (index + 1) / widget.books.length,
-            curve: Curves.easeOutBack,
-          ),
-        ),
-      ),
-    );
-
-    _staggerController.forward();
-  }
-
-  @override
-  void dispose() {
-    _staggerController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _staggerController,
-      builder: (context, child) {
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.65,
-          ),
-          padding: const EdgeInsets.all(20),
-          itemCount: widget.books.length,
-          itemBuilder: (context, index) {
-            final book = widget.books[index];
-            final animation = _cardAnimations[index];
-
-            return Transform.scale(
-              scale: animation.value,
-              child: Transform.translate(
-                offset: Offset(0, 50 * (1 - animation.value)),
-                child: Opacity(
-                  opacity: animation.value.clamp(0.0, 1.0),
-                  child: FuturisticBookCard(
-                    book: book,
-                    onBorrow: () => widget.onBorrow(book.id!, book.title!),
-                    onEdit: () => widget.onEdit(book),
-                    onDelete: () => widget.onDelete(
-                      book.id!,
-                      book.title!,
-                    ), // Tambahkan onDelete
-                    onTap: () => _navigateToBookDetail(
-                      book,
-                    ), // Tambahkan onTap untuk detail
-                  ),
-                ),
-              ),
-            );
-          },
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.75,
+      ),
+      padding: const EdgeInsets.all(16),
+      itemCount: books.length,
+      itemBuilder: (context, index) {
+        final book = books[index];
+        return ModernBookCard(
+          book: book,
+          onBorrow: () => onBorrow(book.id!, book.title!),
+          onEdit: () => onEdit(book),
+          onDelete: () => onDelete(book.id!, book.title!),
+          onTap: () => _navigateToBookDetail(context, book),
         );
       },
     );
   }
 
-  void _navigateToBookDetail(BookDatum book) {
-    // Navigasi ke halaman detail buku
+  void _navigateToBookDetail(BuildContext context, BookDatum book) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -119,14 +57,14 @@ class _BookGridState extends State<BookGrid> with TickerProviderStateMixin {
   }
 }
 
-class FuturisticBookCard extends StatefulWidget {
+class ModernBookCard extends StatefulWidget {
   final BookDatum book;
   final VoidCallback onBorrow;
   final VoidCallback onEdit;
-  final VoidCallback onDelete; // Tambahkan callback delete
-  final VoidCallback onTap; // Tambahkan callback untuk tap
+  final VoidCallback onDelete;
+  final VoidCallback onTap;
 
-  const FuturisticBookCard({
+  const ModernBookCard({
     super.key,
     required this.book,
     required this.onBorrow,
@@ -136,83 +74,212 @@ class FuturisticBookCard extends StatefulWidget {
   });
 
   @override
-  State<FuturisticBookCard> createState() => _FuturisticBookCardState();
+  State<ModernBookCard> createState() => _ModernBookCardState();
 }
 
-class _FuturisticBookCardState extends State<FuturisticBookCard>
-    with TickerProviderStateMixin {
-  late AnimationController _hoverController;
-  late AnimationController _glowController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _glowAnimation;
-  bool _isHovered = false;
+class _ModernBookCardState extends State<ModernBookCard> {
+  bool _isPressed = false;
 
-  @override
-  void initState() {
-    super.initState();
-
-    _hoverController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-
-    _glowController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(parent: _hoverController, curve: Curves.easeOut));
-
-    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
-    );
-
-    _glowController.repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _hoverController.dispose();
-    _glowController.dispose();
-    super.dispose();
-  }
-
-  Color _getStatusColor() {
+  Color get _statusColor {
     final stock = widget.book.stock ?? 0;
-    if (stock > 5) return const Color(0xFF00D2BE);
-    if (stock > 0) return Colors.orange;
-    return Colors.red;
+    if (stock > 5) return const Color(0xFF10B981);
+    if (stock > 0) return const Color(0xFFF59E0B);
+    return const Color(0xFFEF4444);
   }
 
-  String _getStatusText() {
+  String get _statusText {
     final stock = widget.book.stock ?? 0;
     if (stock > 5) return 'Available';
     if (stock > 0) return 'Limited';
     return 'Out of Stock';
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Book Cover Section
+              Expanded(
+                flex: 3,
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        _statusColor.withOpacity(0.15),
+                        _statusColor.withOpacity(0.05),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.book_outlined,
+                          size: 48,
+                          color: _statusColor.withOpacity(0.7),
+                        ),
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _statusColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _statusText,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Book Info Section
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Title and Author
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.book.title ?? 'Unknown Title',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1F2937),
+                              height: 1.2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.book.author ?? 'Unknown Author',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF6B7280),
+                              fontWeight: FontWeight.w400,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+
+                      // Stock and Actions Row
+                      Row(
+                        children: [
+                          Text(
+                            '${widget.book.stock ?? 0}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _statusColor,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'in stock',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                          ),
+                          const Spacer(),
+                          // Action Buttons
+                          _buildActionButton(
+                            icon: Icons.download_outlined,
+                            onPressed: widget.onBorrow,
+                            color: _statusColor,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildActionButton(
+                            icon: Icons.edit_outlined,
+                            onPressed: widget.onEdit,
+                            color: const Color(0xFF3B82F6),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildActionButton(
+                            icon: Icons.delete_outline,
+                            onPressed: _showDeleteDialog,
+                            color: const Color(0xFFEF4444),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildActionButton({
     required IconData icon,
     required VoidCallback onPressed,
     required Color color,
-    required String tooltip,
-    double size = 18,
   }) {
-    return Tooltip(
-      message: tooltip,
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: size, color: color),
+          child: Icon(icon, size: 16, color: color),
         ),
       ),
     );
@@ -221,219 +288,91 @@ class _FuturisticBookCardState extends State<FuturisticBookCard>
   void _showDeleteDialog() {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Hapus Buku'),
-          content: Text(
-            'Apakah Anda yakin ingin menghapus "${widget.book.title}"?',
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          contentPadding: const EdgeInsets.all(24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEE2E2),
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                child: const Icon(
+                  Icons.warning_outlined,
+                  size: 32,
+                  color: Color(0xFFEF4444),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Delete Book',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Are you sure you want to delete "${widget.book.title}"? This action cannot be undone.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+              ),
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFF6B7280),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
                 widget.onDelete();
               },
-              child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
           ],
         );
       },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final statusColor = _getStatusColor();
-
-    return MouseRegion(
-      onEnter: (_) {
-        setState(() => _isHovered = true);
-        _hoverController.forward();
-      },
-      onExit: (_) {
-        setState(() => _isHovered = false);
-        _hoverController.reverse();
-      },
-      child: GestureDetector(
-        onTap: widget.onTap, // Tambahkan gesture detector untuk tap
-        child: AnimatedBuilder(
-          animation: Listenable.merge([_scaleAnimation, _glowAnimation]),
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Container(
-                height: 260,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: statusColor.withOpacity(
-                        0.2 + _glowAnimation.value * 0.1,
-                      ),
-                      blurRadius: 15 + _glowAnimation.value * 10,
-                      offset: const Offset(0, 8),
-                    ),
-                    if (_isHovered)
-                      BoxShadow(
-                        color: statusColor.withOpacity(0.4),
-                        blurRadius: 25,
-                        offset: const Offset(0, 15),
-                      ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Cover dengan gesture untuk detail
-                      GestureDetector(
-                        onTap: widget.onTap,
-                        child: Container(
-                          height: 100,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                statusColor.withOpacity(0.1),
-                                statusColor.withOpacity(0.05),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: statusColor.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.menu_book_rounded,
-                            size: 36,
-                            color: statusColor,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Title dengan gesture untuk detail
-                      GestureDetector(
-                        onTap: widget.onTap,
-                        child: Text(
-                          widget.book.title ?? 'Unknown Title',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF20639B),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-
-                      // Author dengan gesture untuk detail
-                      GestureDetector(
-                        onTap: widget.onTap,
-                        child: Text(
-                          'By : ${widget.book.author ?? 'Unknown'}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                            fontStyle: FontStyle.italic,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-
-                      const Spacer(),
-
-                      // Status + Stock
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              _getStatusText(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: statusColor,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            'Stock: ${widget.book.stock ?? 0}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: statusColor,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Action Buttons - Tambahkan delete button
-                      Row(
-                        children: [
-                          // Borrow Button
-                          Expanded(
-                            child: _buildActionButton(
-                              icon: Icons.download_rounded,
-                              onPressed: widget.onBorrow,
-                              color: statusColor,
-                              tooltip: 'Borrow Book',
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Edit Button
-                          Expanded(
-                            child: _buildActionButton(
-                              icon: Icons.edit_rounded,
-                              onPressed: widget.onEdit,
-                              color: Colors.blue,
-                              tooltip: 'Edit Book',
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Delete Button
-                          Expanded(
-                            child: _buildActionButton(
-                              icon: Icons.delete_rounded,
-                              onPressed: _showDeleteDialog,
-                              color: Colors.red,
-                              tooltip: 'Delete Book',
-                              size: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
     );
   }
 }

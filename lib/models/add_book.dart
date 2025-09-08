@@ -22,7 +22,7 @@ class Data {
   int? id;
   String? title;
   String? author;
-  int? stock; // ✅ Tetap int
+  int? stock; // Tetap int
   DateTime? updatedAt;
   DateTime? createdAt;
   String? coverUrl;
@@ -41,7 +41,7 @@ class Data {
     id: json["id"],
     title: json["title"],
     author: json["author"],
-    // ✅ FIX: Handle both String and int for stock
+    // FIX: Handle both String and int for stock
     stock: _parseStock(json["stock"]),
     updatedAt: json["updated_at"] == null
         ? null
@@ -51,7 +51,7 @@ class Data {
         : DateTime.parse(json["created_at"]),
   );
 
-  // ✅ Helper method untuk parse stock
+  // Helper method untuk parse stock
   static int? _parseStock(dynamic stockValue) {
     if (stockValue == null) return null;
 

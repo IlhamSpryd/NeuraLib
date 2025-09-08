@@ -6,7 +6,7 @@ import 'endpoint.dart';
 import '../models/user_models.dart';
 
 class AuthApi {
-  // 🔹 Register user
+  // Register user
   static Future<UserModel?> register({
     required String name,
     required String email,
@@ -47,7 +47,7 @@ class AuthApi {
     }
   }
 
-  // 🔹 Login user
+  // Login user
   static Future<UserModel?> login({
     required String email,
     required String password,
@@ -81,7 +81,7 @@ class AuthApi {
     }
   }
 
-  // 🔹 Logout
+  // Logout
   static Future<void> logout() async {
     try {
       final token = await SharedPreferencesHelper.getToken();
@@ -97,17 +97,17 @@ class AuthApi {
     }
   }
 
-  // 🔹 Get user profile
+  // Get user profile
   static Future<String?> getUserName() async {
     return await SharedPreferencesHelper.getUserName();
   }
 
-  // 🔹 Get user email
+  // Get user email
   static Future<String?> getUserEmail() async {
     return await SharedPreferencesHelper.getUserEmail();
   }
 
-  // 🔹 Update user profile
+  // Update user profile
   static Future<UserModel?> updateUser({
     required String name,
     required String email,

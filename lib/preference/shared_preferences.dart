@@ -5,6 +5,7 @@ class SharedPreferencesHelper {
   static const String _keyUserName = "user_name";
   static const String _keyUserEmail = "user_email";
   static const String _keyUserId = "user_id";
+  static const String _keyOnboardingCompleted = "onboarding_completed";
 
   /// Simpan token
   static Future<void> saveToken(String token) async {
@@ -67,6 +68,7 @@ class SharedPreferencesHelper {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
+
   static Future<void> setDarkMode(bool isDark) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool("dark_mode", isDark);
@@ -75,5 +77,17 @@ class SharedPreferencesHelper {
   static Future<bool> getDarkMode() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool("dark_mode") ?? false; // default: light
+  }
+
+  /// Set status onboarding
+  static Future<void> setOnboardingCompleted(bool completed) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyOnboardingCompleted, completed);
+  }
+
+  /// Get status onboarding
+  static Future<bool> isOnboardingCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyOnboardingCompleted) ?? false;
   }
 }

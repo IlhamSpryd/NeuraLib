@@ -53,6 +53,10 @@ class _RegisterPageState extends State<RegisterPage> {
               style: GoogleFonts.inter(color: Colors.white),
             ),
             backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         );
         Navigator.pushReplacement(
@@ -67,6 +71,10 @@ class _RegisterPageState extends State<RegisterPage> {
               style: GoogleFonts.inter(color: Colors.white),
             ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         );
       }
@@ -79,10 +87,16 @@ class _RegisterPageState extends State<RegisterPage> {
             style: GoogleFonts.inter(color: Colors.white),
           ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
       _passwordController.clear();
       _confirmPasswordController.clear();
     }
@@ -92,7 +106,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-    final accentColor = theme.colorScheme.tertiary;
+    final accentColor = theme.colorScheme.secondary;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -131,7 +145,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       decoration: InputDecoration(
                         hintText: "Nama",
                         hintStyle: GoogleFonts.inter(),
-                        prefixIcon: const Icon(Icons.person_outline),
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                          color: primaryColor,
+                        ),
                         filled: true,
                         fillColor: theme.colorScheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
@@ -154,7 +171,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       decoration: InputDecoration(
                         hintText: "Email",
                         hintStyle: GoogleFonts.inter(),
-                        prefixIcon: const Icon(Icons.email_outlined),
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                          color: primaryColor,
+                        ),
                         filled: true,
                         fillColor: theme.colorScheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
@@ -186,12 +206,16 @@ class _RegisterPageState extends State<RegisterPage> {
                       decoration: InputDecoration(
                         hintText: "Password",
                         hintStyle: GoogleFonts.inter(),
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: Icon(
+                          Icons.lock_outline,
+                          color: primaryColor,
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
+                            color: primaryColor,
                           ),
                           onPressed: () {
                             setState(() {
@@ -223,12 +247,16 @@ class _RegisterPageState extends State<RegisterPage> {
                       decoration: InputDecoration(
                         hintText: "Konfirmasi Password",
                         hintStyle: GoogleFonts.inter(),
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: Icon(
+                          Icons.lock_outline,
+                          color: primaryColor,
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirmPassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
+                            color: primaryColor,
                           ),
                           onPressed: () {
                             setState(() {
@@ -302,11 +330,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     // Login link
                     TextButton(
                       onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(foregroundColor: accentColor),
                       child: Text(
                         "Sudah punya akun? Login",
                         style: GoogleFonts.inter(
-                          color: accentColor,
                           fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
                       ),
                     ),

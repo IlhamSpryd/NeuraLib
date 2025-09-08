@@ -74,6 +74,9 @@ class BookApi {
         return http.get(uri, headers: await _headers());
       });
 
+      // Debug print untuk melihat struktur response
+      print('Books API Response: ${response.body}');
+
       return listBookItemFromJson(response.body);
     } catch (e) {
       rethrow;

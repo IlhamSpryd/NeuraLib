@@ -6,7 +6,7 @@ import 'endpoint.dart';
 import '../models/borrow_book.dart';
 
 class BorrowApi {
-  // 🔹 Header dengan token
+  // Header dengan token
   static Future<Map<String, String>> _headers({bool json = false}) async {
     final token = await SharedPreferencesHelper.getToken();
     if (token == null) throw Exception("No token found, please login first");
@@ -16,7 +16,7 @@ class BorrowApi {
     };
   }
 
-  // 🔹 General request handler
+  // General request handler
   static Future<http.Response> _request(
     Future<http.Response> Function() fn,
   ) async {
@@ -35,7 +35,7 @@ class BorrowApi {
     }
   }
 
-  // 🔹 Borrow book
+  // Borrow book
   static Future<BorrowBook?> borrowBook(int bookId) async {
     try {
       final response = await _request(() async {
@@ -51,7 +51,7 @@ class BorrowApi {
     }
   }
 
-  // 🔹 Return borrowed book
+  // Return borrowed book
   static Future<BorrowBook?> returnBook(int borrowId) async {
     try {
       final response = await _request(() async {

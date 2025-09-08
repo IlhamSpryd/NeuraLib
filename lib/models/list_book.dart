@@ -8,14 +8,20 @@ String listBookItemToJson(ListBookItem data) => json.encode(data.toJson());
 class ListBookItem {
   String? message;
   List<BookDatum>? data;
+  Meta? meta;
 
-  ListBookItem({this.message, this.data});
+  ListBookItem({this.message, this.data, this.meta});
 
   factory ListBookItem.fromJson(Map<String, dynamic> json) => ListBookItem(
     message: json["message"],
-    data: json["data"] == null
+    data: json["data"] == null || json["data"]["items"] == null
         ? []
-        : List<BookDatum>.from(json["data"]!.map((x) => BookDatum.fromJson(x))),
+        : List<BookDatum>.from(
+            json["data"]["items"]!.map((x) => BookDatum.fromJson(x)),
+          ),
+    meta: json["data"] == null || json["data"]["meta"] == null
+        ? null
+        : Meta.fromJson(json["data"]["meta"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -23,6 +29,7 @@ class ListBookItem {
     "data": data == null
         ? []
         : List<dynamic>.from(data!.map((x) => x.toJson())),
+    "meta": meta?.toJson(),
   };
 }
 
@@ -30,9 +37,10 @@ class BookDatum {
   int? id;
   String? title;
   String? author;
-  int? stock; // ✅ Tetap int di model
+  int? stock;
   DateTime? createdAt;
   DateTime? updatedAt;
+  String? coverPath;
   String? coverUrl;
 
   BookDatum({
@@ -42,6 +50,7 @@ class BookDatum {
     this.stock,
     this.createdAt,
     this.updatedAt,
+    this.coverPath,
     this.coverUrl,
   });
 
@@ -49,7 +58,6 @@ class BookDatum {
     id: json["id"],
     title: json["title"],
     author: json["author"],
-    // ✅ FIX: Handle both String and int for stock
     stock: _parseStock(json["stock"]),
     createdAt: json["created_at"] == null
         ? null
@@ -57,12 +65,11 @@ class BookDatum {
     updatedAt: json["updated_at"] == null
         ? null
         : DateTime.parse(json["updated_at"]),
-    coverUrl: json["cover_url"] != null
-        ? "https://appperpus.mobileprojp.com/api${json["cover_url"]}"
-        : null,
+    coverPath: json["cover_path"],
+    coverUrl: json["cover_url"],
   );
 
-  // ✅ Helper method untuk parse stock
+  // Helper method untuk parse stock
   static int? _parseStock(dynamic stockValue) {
     if (stockValue == null) return null;
 
@@ -82,6 +89,30 @@ class BookDatum {
     "stock": stock,
     "created_at": createdAt?.toIso8601String(),
     "updated_at": updatedAt?.toIso8601String(),
+    "cover_path": coverPath,
     "cover_url": coverUrl,
+  };
+}
+
+class Meta {
+  int? currentPage;
+  int? lastPage;
+  int? perPage;
+  int? total;
+
+  Meta({this.currentPage, this.lastPage, this.perPage, this.total});
+
+  factory Meta.fromJson(Map<String, dynamic> json) => Meta(
+    currentPage: json["current_page"],
+    lastPage: json["last_page"],
+    perPage: json["per_page"],
+    total: json["total"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "current_page": currentPage,
+    "last_page": lastPage,
+    "per_page": perPage,
+    "total": total,
   };
 }

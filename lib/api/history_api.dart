@@ -6,14 +6,14 @@ import 'endpoint.dart';
 import '../models/history_book.dart';
 
 class HistoryApi {
-  // 🔹 Header dengan token
+  // Header dengan token
   static Future<Map<String, String>> _headers() async {
     final token = await SharedPreferencesHelper.getToken();
     if (token == null) throw Exception("No token found, please login first");
     return {"Authorization": "Bearer $token"};
   }
 
-  // 🔹 General request handler
+  // General request handler
   static Future<http.Response> _request(
     Future<http.Response> Function() fn,
   ) async {
@@ -32,7 +32,7 @@ class HistoryApi {
     }
   }
 
-  // 🔹 Get history by user ID
+  // Get history by user ID
   static Future<HistoryBook?> getHistory(int userId) async {
     try {
       final response = await _request(() async {
@@ -47,7 +47,7 @@ class HistoryApi {
     }
   }
 
-  // 🔹 Get current user's history
+  // Get current user's history
   static Future<HistoryBook?> getMyHistory() async {
     try {
       final userId = await SharedPreferencesHelper.getUserId();

@@ -1,9 +1,9 @@
 import 'package:athena/api/authentication_api.dart';
 import 'package:athena/preference/shared_preferences.dart';
 import 'package:athena/views/main/profile_page.dart';
-import 'package:athena/widgets/slacktile.dart';
 import 'package:athena/widgets/switchtile.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../widgets/section_card.dart';
 
@@ -17,22 +17,26 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool darkMode = false;
   bool mobilePush = true;
-  bool activityWorkspace = true;
-  bool alwaysEmail = false;
-  bool pageUpdates = true;
-  bool workspaceDigest = true;
   int slackMode = 0;
 
   String? _userName;
   String? _userEmail;
   bool _isLoading = true;
   String? _error;
+  bool _isMounted = false;
 
   @override
   void initState() {
     super.initState();
+    _isMounted = true;
     _loadUserProfile();
     _loadDarkModePreference();
+  }
+
+  @override
+  void dispose() {
+    _isMounted = false;
+    super.dispose();
   }
 
   Future<void> _loadUserProfile() async {
@@ -40,97 +44,65 @@ class _SettingsPageState extends State<SettingsPage> {
       final name = await SharedPreferencesHelper.getUserName();
       final email = await SharedPreferencesHelper.getUserEmail();
 
-      setState(() {
-        _userName = name;
-        _userEmail = email;
-        _isLoading = false;
-      });
+      if (_isMounted) {
+        setState(() {
+          _userName = name;
+          _userEmail = email;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = "Gagal memuat data user";
-        _isLoading = false;
-      });
+      if (_isMounted) {
+        setState(() {
+          _error = "Gagal memuat data user";
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _loadDarkModePreference() async {
     final isDark = await SharedPreferencesHelper.getDarkMode();
-    setState(() {
-      darkMode = isDark;
-    });
+    if (_isMounted) {
+      setState(() {
+        darkMode = isDark;
+      });
+    }
   }
 
   Future<void> _toggleDarkMode(bool value) async {
-    setState(() {
-      darkMode = value;
-    });
+    if (_isMounted) {
+      setState(() {
+        darkMode = value;
+      });
+    }
     await SharedPreferencesHelper.setDarkMode(value);
-  }
-
-  String get slackLabel {
-    switch (slackMode) {
-      case 1:
-        return 'Mentions';
-      case 2:
-        return 'All';
-      default:
-        return 'Off';
-    }
-  }
-
-  Future<void> _pickSlackMode() async {
-    final result = await showModalBottomSheet<int>(
-      context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SlackOption(
-                label: 'Off',
-                selected: slackMode == 0,
-                onTap: () => Navigator.pop(ctx, 0),
-              ),
-              SlackOption(
-                label: 'Mentions',
-                selected: slackMode == 1,
-                onTap: () => Navigator.pop(ctx, 1),
-              ),
-              SlackOption(
-                label: 'All',
-                selected: slackMode == 2,
-                onTap: () => Navigator.pop(ctx, 2),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-    if (result != null) {
-      setState(() => slackMode = result);
-    }
   }
 
   Future<void> _logout() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Konfirmasi"),
-        content: const Text("Apakah kamu yakin ingin keluar?"),
+        title: Text(
+          "Konfirmasi",
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "Apakah kamu yakin ingin keluar?",
+          style: GoogleFonts.inter(),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Batal"),
+            child: Text("Batal", style: GoogleFonts.inter()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
-            child: const Text("Keluar", style: TextStyle(color: Colors.white)),
+            child: Text(
+              "Keluar",
+              style: GoogleFonts.inter(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -139,21 +111,27 @@ class _SettingsPageState extends State<SettingsPage> {
     if (confirm == true) {
       await AuthApi.logout();
       await SharedPreferencesHelper.clearAll();
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, "/login");
+      if (_isMounted && context.mounted) {
+        Navigator.pushReplacementNamed(context, "/login");
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
 
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator(color: primaryColor)),
+      );
     }
 
     if (_error != null) {
-      return Scaffold(body: Center(child: Text(_error!)));
+      return Scaffold(
+        body: Center(child: Text(_error!, style: GoogleFonts.inter())),
+      );
     }
 
     return Scaffold(
@@ -161,7 +139,12 @@ class _SettingsPageState extends State<SettingsPage> {
       appBar: AppBar(
         elevation: 0,
         centerTitle: true,
-        title: const Text('Settings'),
+        title: Text(
+          'Settings',
+          style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
@@ -176,7 +159,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ListTile(
                 leading: CircleAvatar(
                   radius: 24,
-                  backgroundColor: Colors.deepPurpleAccent,
+                  backgroundColor: primaryColor,
                   child: Text(
                     _userName != null && _userName!.isNotEmpty
                         ? _userName![0].toUpperCase()
@@ -189,16 +172,23 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 title: Text(
                   _userName ?? "Guest",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text(_userEmail ?? "noemail@example.com"),
+                subtitle: Text(
+                  _userEmail ?? "noemail@example.com",
+                  style: GoogleFonts.inter(),
+                ),
                 trailing: IconButton(
-                  icon: const Icon(Icons.edit),
+                  icon: Icon(Icons.edit, color: primaryColor),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const ProfileBody()),
-                    ).then((_) => _loadUserProfile());
+                    ).then((_) {
+                      if (_isMounted) {
+                        _loadUserProfile();
+                      }
+                    });
                   },
                 ),
               ),
@@ -209,7 +199,8 @@ class _SettingsPageState extends State<SettingsPage> {
           // General Settings
           Text(
             'General Settings',
-            style: textTheme.headlineSmall?.copyWith(
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -229,7 +220,8 @@ class _SettingsPageState extends State<SettingsPage> {
           // Notifications Section
           Text(
             'Notifications',
-            style: textTheme.headlineSmall?.copyWith(
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -241,7 +233,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 subtitle:
                     'Receive push notifications on mentions and comments via your mobile app',
                 value: mobilePush,
-                onChanged: (v) => setState(() => mobilePush = v),
+                onChanged: (v) {
+                  if (_isMounted) {
+                    setState(() => mobilePush = v);
+                  }
+                },
               ),
             ],
           ),
@@ -253,19 +249,18 @@ class _SettingsPageState extends State<SettingsPage> {
             child: ElevatedButton.icon(
               onPressed: _logout,
               icon: const Icon(Icons.logout_sharp, color: Colors.white),
-              label: const Text(
+              label: Text(
                 "Keluar",
-                style: TextStyle(color: Colors.white),
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),

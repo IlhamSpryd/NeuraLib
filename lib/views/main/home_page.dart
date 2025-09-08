@@ -108,6 +108,69 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _loadUserData();
   }
 
+  // Helper method untuk menampilkan cover buku
+  Widget _buildBookCover(
+    String? coverUrl, {
+    double width = 100,
+    double height = 150,
+  }) {
+    if (coverUrl == null || coverUrl.isEmpty) {
+      return Container(
+        width: width,
+        height: height,
+        color: Colors.grey[200],
+        child: Icon(Icons.book, color: Colors.grey[400], size: 40),
+      );
+    }
+
+    return Image.network(
+      coverUrl,
+      width: width,
+      height: height,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          width: width,
+          height: height,
+          color: Colors.grey[200],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: width,
+          height: height,
+          color: Colors.grey[200],
+          child: Icon(Icons.error, color: Colors.red, size: 40),
+        );
+      },
+    );
+  }
+
+  // Navigasi ke detail buku dengan coverUrl
+  void _navigateToBookDetail(BookDatum book) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookDetailPage(
+          bookId: book.id!,
+          title: book.title ?? 'Unknown Title',
+          author: book.author ?? 'Unknown Author',
+          coverUrl: book.coverUrl,
+          stock: book.stock ?? 0,
+        ),
+      ),
+    );
+  }
+
   Future<void> _loadUserData() async {
     try {
       final userName = await SharedPreferencesHelper.getUserName();
@@ -332,20 +395,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
-  void _navigateToBookDetail(BookDatum book) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BookDetailPage(
-          bookId: book.id!,
-          title: book.title ?? 'Unknown Title',
-          author: book.author ?? 'Unknown Author',
-          stock: book.stock ?? 0,
-        ),
-      ),
-    );
-  }
-
   void _navigateToAddBook() {
     Navigator.push(
       context,
@@ -431,7 +480,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     String errorMessage = "Terjadi kesalahan sistem";
 
     if (error.toString().contains("No token found")) {
-      errorMessage = "Sesi neural telah berakhir";
+      errorMessage = "Sesi telah berakhir";
     } else if (error.toString().contains("HTTP") ||
         error.toString().contains("FormatException")) {
       errorMessage = "Koneksi server bermasalah";
@@ -476,7 +525,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 8),
           Text(
-            'Sistem neural mengalami gangguan',
+            'Sistem mengalami gangguan',
             style: TextStyle(color: Colors.red.shade600, fontSize: 14),
             textAlign: TextAlign.center,
           ),
@@ -578,7 +627,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 8),
           Text(
-            'Inisialisasi perpustakaan neural\ndengan menambahkan buku pertama',
+            'Inisialisasi perpustakaan NeuraLib\ndengan menambahkan buku pertama',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 14,
@@ -625,7 +674,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           slivers: [
             // Modern App Bar dengan tinggi yang lebih optimal
             SliverAppBar(
-              expandedHeight: 180, // Increased height to prevent overflow
+              expandedHeight: 180,
               floating: true,
               pinned: true,
               backgroundColor: Colors.transparent,
@@ -666,7 +715,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    // Teks dalam Flexible untuk mencegah overflow
                                     Flexible(
                                       child: Row(
                                         children: [
@@ -674,7 +722,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                             'Hello, ',
                                             style: TextStyle(
                                               color: Colors.white,
-                                              fontSize: 25, // Reduced font size
+                                              fontSize: 25,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -683,8 +731,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                               _userName ?? 'User',
                                               style: const TextStyle(
                                                 color: Colors.white,
-                                                fontSize:
-                                                    25, // Reduced font size
+                                                fontSize: 25,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                               overflow: TextOverflow.ellipsis,
@@ -695,15 +742,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-
-                                    // Circle Avatar
                                     GestureDetector(
                                       onTap: () {
                                         _showUserMenu(context);
                                       },
                                       child: Container(
-                                        width: 45, // Slightly smaller
-                                        height: 45, // Slightly smaller
+                                        width: 45,
+                                        height: 45,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: Colors.white.withOpacity(0.2),
@@ -743,8 +788,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   ],
                                 ),
                                 const SizedBox(height: 25),
-
-                                // Search Bar - Simplified version
                                 GestureDetector(
                                   onTap: _navigateToSearchPage,
                                   child: Container(
@@ -807,7 +850,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            // Carousel Banner
             SliverToBoxAdapter(
               child: SlideTransition(
                 position: _slideAnimation,
@@ -817,10 +859,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
             ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-            // Recommendation Header
             SliverToBoxAdapter(
               child: FadeTransition(
                 opacity: _fadeAnimation,
@@ -830,10 +869,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
             ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-            // Book Grid
             SliverToBoxAdapter(
               child: FutureBuilder<ListBookItem?>(
                 future: _booksFuture,
@@ -861,7 +897,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 },
               ),
             ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 50)),
           ],
         ),
@@ -895,7 +930,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Icons.person,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                title: Text('Profil Saya'),
+                title: const Text('Profil Saya'),
                 onTap: () {
                   Navigator.pop(context);
                 },
@@ -905,7 +940,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Icons.settings,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                title: Text('Pengaturan'),
+                title: const Text('Pengaturan'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(

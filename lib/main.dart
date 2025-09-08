@@ -2,6 +2,7 @@ import 'package:athena/views/auth/login_page.dart';
 import 'package:athena/views/auth/register_page.dart';
 import 'package:athena/views/edit_profile.dart';
 import 'package:athena/views/main/dashboard_page.dart';
+import 'package:athena/views/onboarding%20screen.dart';
 import 'package:athena/views/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -95,6 +96,7 @@ class NeuraLibApp extends StatelessWidget {
       ),
       home: const SplashScreen(),
       routes: {
+        '/onboarding': (context) => const OnboardingScreen(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
         '/dashboard': (context) => const DashboardPage(),
@@ -114,23 +116,28 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _isLoading = true;
   bool _isLoggedIn = false;
+  bool _onboardingCompleted = false;
 
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    _checkStatus();
   }
 
-  Future<void> _checkLoginStatus() async {
+  Future<void> _checkStatus() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
+      final onboardingCompleted =
+          prefs.getBool('onboarding_completed') ?? false;
+
       setState(() {
         _isLoggedIn = token != null;
+        _onboardingCompleted = onboardingCompleted;
         _isLoading = false;
       });
     } catch (e) {
-      print('Error checking login status: $e');
+      print('Error checking status: $e');
       setState(() {
         _isLoading = false;
       });
@@ -155,6 +162,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
           ),
         ),
       );
+    }
+
+    if (!_onboardingCompleted) {
+      return const OnboardingScreen();
     }
 
     return _isLoggedIn ? const DashboardPage() : const LoginPage();
