@@ -1,6 +1,6 @@
 import 'package:athena/api/authentication_api.dart';
 import 'package:flutter/material.dart';
-import 'package:athena/preference/shared_preferences.dart';
+import 'package:athena/utils/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class EditProfilePage extends StatefulWidget {

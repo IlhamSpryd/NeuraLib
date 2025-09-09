@@ -32,7 +32,7 @@ class BookDescription extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         const Text(
-          "Deskripsi Buku",
+          "Description",
           style: TextStyle(
             color: Colors.deepPurpleAccent,
             fontSize: 16,

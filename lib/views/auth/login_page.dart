@@ -2,6 +2,7 @@ import 'package:athena/api/authentication_api.dart';
 import 'package:athena/views/main/dashboard_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,11 +22,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late AnimationController _scaleController;
+  late AnimationController _lottieController;
+  late AnimationController _welcomeBounceController;
 
   // Animations
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _welcomeBounceAnimation;
 
   @override
   void initState() {
@@ -36,17 +40,27 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   void _initializeAnimations() {
     // Initialize animation controllers
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 2200),
       vsync: this,
     );
 
     _slideController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
     _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _lottieController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+
+    _welcomeBounceController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
       vsync: this,
     );
 
@@ -64,10 +78,24 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack),
     );
 
-    // Start animations
+    // Animasi bounce untuk Welcome Back
+    _welcomeBounceAnimation = Tween<double>(begin: -1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _welcomeBounceController,
+        curve: Curves.elasticOut,
+      ),
+    );
+
+    // Start animations dengan delay bertahap
     _fadeController.forward();
     _slideController.forward();
     _scaleController.forward();
+    _lottieController.forward();
+
+    // Start welcome bounce animation dengan delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _welcomeBounceController.forward();
+    });
   }
 
   @override
@@ -75,6 +103,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _fadeController.dispose();
     _slideController.dispose();
     _scaleController.dispose();
+    _lottieController.dispose();
+    _welcomeBounceController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -182,38 +212,60 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   child: ScaleTransition(
                     scale: _scaleAnimation,
                     child: Container(
-                      width: 100,
-                      height: 100,
+                      width: 220,
+                      height: 220,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [primaryColor, accentColor],
-                        ),
+                        color: Colors.transparent,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        Icons.menu_book_rounded,
-                        size: 50,
-                        color: Colors.white,
+                      child: Lottie.asset(
+                        'assets/lottie/splashscreen.json',
+                        controller: _lottieController,
+                        onLoaded: (composition) {
+                          _lottieController
+                            ..duration = composition.duration
+                            ..forward();
+                        },
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
+                        repeat: true,
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
-              SlideTransition(
-                position: _slideAnimation,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Text(
-                    "Welcome Back",
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
+              const SizedBox(height: 5),
+
+              // Animasi Welcome Back
+              AnimatedBuilder(
+                animation: _welcomeBounceController,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _welcomeBounceAnimation.value * 100),
+                    child: Opacity(
+                      opacity: _welcomeBounceController.value,
+                      child: Text(
+                        "Welcome Back",
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                          shadows: [
+                            Shadow(
+                              color: primaryColor.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
+
               const SizedBox(height: 8),
               SlideTransition(
                 position: _slideAnimation,

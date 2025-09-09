@@ -1,173 +1,214 @@
+import 'dart:ui';
+import 'package:athena/authWrapper.dart';
 import 'package:athena/views/auth/login_page.dart';
 import 'package:athena/views/auth/register_page.dart';
-import 'package:athena/views/edit_profile.dart';
 import 'package:athena/views/main/dashboard_page.dart';
 import 'package:athena/views/onboarding%20screen.dart';
+import 'package:athena/views/settings_page.dart';
 import 'package:athena/views/splash_screen.dart';
+import 'package:athena/views/sub%20page/edit_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const NeuraLibApp());
 }
 
-class NeuraLibApp extends StatelessWidget {
+class NeuraLibApp extends StatefulWidget {
   const NeuraLibApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NeuraLib',
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromRGBO(32, 99, 155, 1),
-          primary: const Color.fromRGBO(32, 99, 155, 1),
-          secondary: const Color.fromRGBO(0, 210, 190, 1),
-          tertiary: const Color.fromRGBO(138, 43, 226, 1),
-          background: const Color.fromRGBO(245, 245, 245, 1),
-          surface: Colors.white,
-          brightness: Brightness.light,
-        ),
-        textTheme: TextTheme(
-          displayLarge: GoogleFonts.spaceGrotesk(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-          titleLarge: GoogleFonts.spaceGrotesk(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
-          ),
-          bodyLarge: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-          bodyMedium: GoogleFonts.inter(fontSize: 14, color: Colors.black87),
-          labelLarge: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromRGBO(32, 99, 155, 1),
-          primary: const Color.fromRGBO(32, 99, 155, 1),
-          secondary: const Color.fromRGBO(0, 210, 190, 1),
-          tertiary: const Color.fromRGBO(138, 43, 226, 1),
-          background: const Color.fromRGBO(15, 23, 42, 1),
-          surface: const Color.fromRGBO(26, 32, 44, 1),
-          brightness: Brightness.dark,
-        ),
-        textTheme: TextTheme(
-          displayLarge: GoogleFonts.spaceGrotesk(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          titleLarge: GoogleFonts.spaceGrotesk(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-          bodyLarge: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-          ),
-          bodyMedium: GoogleFonts.inter(fontSize: 14, color: Colors.white70),
-          labelLarge: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-      ),
-      home: const SplashScreen(),
-      routes: {
-        '/onboarding': (context) => const OnboardingScreen(),
-        '/login': (context) => const LoginPage(),
-        '/register': (context) => const RegisterPage(),
-        '/dashboard': (context) => const DashboardPage(),
-        '/edit_profile': (context) => const EditProfilePage(),
-      },
-    );
-  }
+  State<NeuraLibApp> createState() => _NeuraLibAppState();
 }
 
-class AuthWrapper extends StatefulWidget {
-  const AuthWrapper({super.key});
+class _NeuraLibAppState extends State<NeuraLibApp>
+    with TickerProviderStateMixin {
+  final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(
+    ThemeMode.system,
+  );
 
-  @override
-  State<AuthWrapper> createState() => _AuthWrapperState();
-}
-
-class _AuthWrapperState extends State<AuthWrapper> {
-  bool _isLoading = true;
-  bool _isLoggedIn = false;
-  bool _onboardingCompleted = false;
+  late AnimationController _atmosphereController;
+  late Animation<double> _atmosphereAnimation;
 
   @override
   void initState() {
     super.initState();
-    _checkStatus();
+    _atmosphereController = AnimationController(
+      duration: const Duration(seconds: 8),
+      vsync: this,
+    );
+    _atmosphereAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _atmosphereController, curve: Curves.easeInOut),
+    );
+    _atmosphereController.repeat(reverse: true);
   }
 
-  Future<void> _checkStatus() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      final onboardingCompleted =
-          prefs.getBool('onboarding_completed') ?? false;
-
-      setState(() {
-        _isLoggedIn = token != null;
-        _onboardingCompleted = onboardingCompleted;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error checking status: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  @override
+  void dispose() {
+    _atmosphereController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
-        body: Center(
-          child: SizedBox(
-            width: 40,
-            height: 40,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Color.fromRGBO(32, 99, 155, 1),
-              ),
-            ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, currentTheme, _) {
+        return MaterialApp(
+          title: 'NeuraLib',
+          debugShowCheckedModeBanner: false,
+          themeMode: currentTheme,
+          theme: _buildLightTheme(),
+          darkTheme: _buildDarkTheme(),
+          home: SplashScreen(themeNotifier: themeNotifier),
+          routes: {
+            '/authWrapper': (context) =>
+                AuthWrapper(themeNotifier: themeNotifier),
+            '/settings': (context) =>
+                SettingsPage(themeNotifier: themeNotifier),
+            '/onboarding': (context) => const OnboardingScreen(),
+            '/login': (context) => const LoginPage(),
+            '/register': (context) => const RegisterPage(),
+            '/dashboard': (context) => const DashboardPage(),
+            '/edit_profile': (context) => const EditProfilePage(),
+          },
+        );
+      },
+    );
+  }
+
+  ThemeData _buildLightTheme() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+    );
+
+    return baseTheme.copyWith(
+      colorScheme:
+          ColorScheme.fromSeed(
+            seedColor: const Color(0xFF6C63FF),
+            primary: const Color(0xFF6C63FF),
+            secondary: const Color(0xFF00D2BE),
+            tertiary: const Color(0xFFFF6B9D),
+            surface: const Color(0xFFFAFAFF),
+            background: const Color(0xFFF5F7FF),
+            brightness: Brightness.light,
+          ).copyWith(
+            surfaceContainerHighest: const Color(0xFFE8ECFF),
+            outline: const Color(0xFFD0D5FF),
           ),
+      textTheme: TextTheme(
+        displayLarge: GoogleFonts.orbitron(
+          fontSize: 32,
+          fontWeight: FontWeight.w900,
+          color: const Color(0xFF1A1B3A),
+          letterSpacing: -0.5,
         ),
-      );
-    }
+        displayMedium: GoogleFonts.orbitron(
+          fontSize: 28,
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFF1A1B3A),
+        ),
+        headlineLarge: GoogleFonts.poppins(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF1A1B3A),
+        ),
+        titleLarge: GoogleFonts.poppins(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF2D2F4F),
+        ),
+        bodyLarge: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF3D3F5F),
+        ),
+        bodyMedium: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: const Color(0xFF4D4F6F),
+        ),
+        labelLarge: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        color: const Color(0x4D1A1B3A),
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
 
-    if (!_onboardingCompleted) {
-      return const OnboardingScreen();
-    }
+  ThemeData _buildDarkTheme() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+    );
 
-    return _isLoggedIn ? const DashboardPage() : const LoginPage();
+    return baseTheme.copyWith(
+      colorScheme:
+          ColorScheme.fromSeed(
+            seedColor: const Color(0xFF6C63FF),
+            primary: const Color(0xFF8B7EFF),
+            secondary: const Color(0xFF00F5D4),
+            tertiary: const Color(0xFFFF85B3),
+            surface: const Color(0xFF0A0B1E),
+            background: const Color(0xFF060714),
+            brightness: Brightness.dark,
+          ).copyWith(
+            surfaceContainerHighest: const Color(0xFF1A1B3A),
+            outline: const Color(0xFF2D2F4F),
+          ),
+      textTheme: TextTheme(
+        displayLarge: GoogleFonts.orbitron(
+          fontSize: 32,
+          fontWeight: FontWeight.w900,
+          color: const Color(0xFFE6E8FF),
+          letterSpacing: -0.5,
+        ),
+        displayMedium: GoogleFonts.orbitron(
+          fontSize: 28,
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFFE6E8FF),
+        ),
+        headlineLarge: GoogleFonts.poppins(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFFE6E8FF),
+        ),
+        titleLarge: GoogleFonts.poppins(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFFD6D8F5),
+        ),
+        bodyLarge: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFFBCC0E5),
+        ),
+        bodyMedium: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: const Color(0xFFA8ACD5),
+        ),
+        labelLarge: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF060714),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        color: const Color(0x4D1A1B3A),
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
   }
 }

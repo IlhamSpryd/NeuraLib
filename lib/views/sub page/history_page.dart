@@ -1,5 +1,4 @@
-import 'package:athena/api/borrow_api.dart';
-import 'package:athena/api/history_api.dart';
+import 'package:athena/api/api_service.dart';
 import 'package:athena/models/history_book.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -32,7 +31,7 @@ class _HistoryPageState extends State<HistoryPage> {
   void _loadHistory() {
     if (_isMounted) {
       setState(() {
-        _historyFuture = HistoryApi.getMyHistory();
+        _historyFuture = BookApi.getBorrowHistory();
       });
     }
   }
@@ -43,7 +42,7 @@ class _HistoryPageState extends State<HistoryPage> {
     }
 
     try {
-      await BorrowApi.returnBook(borrowId);
+      await BookApi.returnBook(borrowId);
 
       if (_isMounted) {
         ScaffoldMessenger.of(context).showSnackBar(

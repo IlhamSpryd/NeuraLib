@@ -1,13 +1,12 @@
-import 'dart:async';
-
-import 'package:athena/views/auth/login_page.dart';
-import 'package:athena/views/main/dashboard_page.dart';
+import 'package:athena/authWrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lottie/lottie.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final ValueNotifier<ThemeMode> themeNotifier;
+
+  const SplashScreen({super.key, required this.themeNotifier});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -16,46 +15,47 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _fadeAnim;
-  late Animation<double> _scaleAnim;
+  late Animation<double> _opacityAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
 
     _controller = AnimationController(
+      duration: const Duration(seconds: 3),
       vsync: this,
-      duration: const Duration(seconds: 2),
     );
 
-    _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-    _scaleAnim = Tween<double>(
-      begin: 0.8,
-      end: 1.1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(
+          0.4,
+          1.0,
+          curve: Curves.elasticOut,
+        ),
+      ),
+    );
 
     _controller.forward();
 
-    Timer(const Duration(seconds: 3), _checkLoginStatus);
-  }
-
-  Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-
-    if (!mounted) return;
-
-    if (token != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const DashboardPage()),
+    // Navigasi ke AuthWrapper setelah splash screen selesai
+    Future.delayed(const Duration(seconds: 4), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) =>
+              AuthWrapper(themeNotifier: widget.themeNotifier),
+        ),
       );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
-    }
+    });
   }
 
   @override
@@ -66,55 +66,65 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
-    final accentColor = theme.colorScheme.tertiary;
-
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Colors.white,
       body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: ScaleTransition(
-            scale: _scaleAnim,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Bisa diganti dengan logo SVG/PNG
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [primaryColor, accentColor],
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _opacityAnimation.value,
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: child,
+              ),
+            );
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Lottie.asset(
+                'assets/lottie/books.json',
+                width: 300,
+                height: 300,
+                fit: BoxFit.contain,
+                repeat: true,
+              ),
+              const SizedBox(height: 24),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Neura',
+                      style: GoogleFonts.orbitron(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black,
+                        letterSpacing: 1.5,
+                      ),
                     ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.menu_book_rounded,
-                    size: 50,
-                    color: Colors.white,
-                  ),
+                    TextSpan(
+                      text: 'Lib',
+                      style: GoogleFonts.orbitron(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.blue[700],
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  "NeuraLib",
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor,
-                  ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your Digital Library',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  "Future of Digital Library",
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

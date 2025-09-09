@@ -1,6 +1,6 @@
 // auth_api.dart
 import 'dart:convert';
-import 'package:athena/preference/shared_preferences.dart';
+import 'package:athena/utils/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'endpoint.dart';
 import '../models/user_models.dart';

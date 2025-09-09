@@ -11,18 +11,18 @@ class RecommendationHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
-            "Rekomendasi untuk Anda",
+            "Recommends",
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.blueAccent,
             ),
           ),
           TextButton(
             onPressed: () {},
-            style: TextButton.styleFrom(foregroundColor: Colors.deepPurple),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey),
             child: const Text(
-              "selengkapnya",
+              "view more >",
               style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
             ),
           ),

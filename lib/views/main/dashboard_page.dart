@@ -1,8 +1,9 @@
 import 'dart:ui'; // Add this import for ImageFilter
 
-import 'package:athena/preference/shared_preferences.dart';
-import 'package:athena/views/main/add_edit_book_page.dart';
+import 'package:athena/utils/shared_preferences.dart';
+import 'package:athena/views/main/addBookPage.dart';
 import 'package:athena/views/main/home_page.dart';
+import 'package:athena/views/main/inboxPage.dart';
 import 'package:athena/views/main/profile_page.dart';
 import 'package:flutter/material.dart';
 
@@ -19,8 +20,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const AddEditBookPage(),
-    const ProfileBody(),
+    const AddBookPage(),
+    const InboxPage(),
+    const ProfilePage(),
   ];
 
   @override
@@ -61,7 +63,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.black,
       extendBody: true,
       body: _pages[_currentIndex],
       bottomNavigationBar: Container(
@@ -69,8 +71,8 @@ class _DashboardPageState extends State<DashboardPage> {
         height: 70,
         decoration: BoxDecoration(
           // Efek kaca modern (glassmorphism)
-          color: Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(35),
+          color: Colors.black.withOpacity(0.40),
+          borderRadius: BorderRadius.circular(50),
           border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
           boxShadow: [
             BoxShadow(
@@ -100,10 +102,16 @@ class _DashboardPageState extends State<DashboardPage> {
                   inactiveIcon: "assets/images/add1.png",
                   activeIcon: "assets/images/add.png",
                 ),
+                // inbox tab
+                _buildNavItem(
+                  index: 2,
+                  inactiveIcon: "assets/images/inbox-full.png",
+                  activeIcon: "assets/images/inbox-full (1).png",
+                ),
 
                 // Profile Tab
                 _buildNavItem(
-                  index: 2,
+                  index: 3,
                   inactiveIcon: "assets/images/user.png",
                   activeIcon: "assets/images/user1.png",
                 ),

@@ -1,12 +1,14 @@
 // user_api.dart
 import 'dart:convert';
-import 'package:athena/preference/shared_preferences.dart';
+
+import 'package:athena/utils/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'endpoint.dart';
+
 import '../models/user_models.dart';
+import 'endpoint.dart';
 
 class UserApi {
-  // Header dengan token
+  // Header with token
   static Future<Map<String, String>> _headers({bool json = false}) async {
     final token = await SharedPreferencesHelper.getToken();
     if (token == null) throw Exception("No token found, please login first");
@@ -61,6 +63,19 @@ class UserApi {
         );
       });
       return userModelFromJson(response.body);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Logout
+  static Future<void> logout() async {
+    try {
+      await _request(() async {
+        return http.post(Uri.parse(Endpoint.logout), headers: await _headers());
+      });
+      // Clear token after successful logout request
+      await SharedPreferencesHelper.clearToken();
     } catch (e) {
       rethrow;
     }

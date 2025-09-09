@@ -24,6 +24,7 @@ dependencies:
   badges: ^3.0.1
   google_fonts: ^6.2.1
   get: ^4.6.5
+  lottie: ^3.1.0
 
 dev_dependencies:
   flutter_test:
@@ -45,6 +46,10 @@ flutter:
     - assets/images/add1.png
     - assets/images/settings-sliders.png
     - assets/images/onboarding.png
+    - assets/images/inbox-full (1).png
+    - assets/images/inbox-full.png
+    - assets/lottie/splashscreen.json
+    - assets/lottie/books.json
 
   fonts:
     - family: Montserrat

@@ -28,7 +28,7 @@ class BookActionButtons extends StatelessWidget {
             ),
             icon: const Icon(Icons.menu_book, color: Colors.white),
             label: const Text(
-              "Baca Sekarang",
+              "Pinjam Buku",
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -38,7 +38,7 @@ class BookActionButtons extends StatelessWidget {
           onPressed: onFavoritePressed,
           icon: Icon(
             isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: isFavorite ? Colors.red : Colors.white,
+            color: isFavorite ? Colors.red : Colors.grey,
           ),
         ),
       ],

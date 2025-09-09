@@ -1,6 +1,6 @@
 import 'package:athena/api/book_api.dart';
 import 'package:athena/models/list_book.dart';
-import 'package:athena/views/book_detail_page.dart';
+import 'package:athena/views/sub%20page/book_detail_page.dart';
 import 'package:flutter/material.dart';
 
 class SearchPage extends StatefulWidget {
