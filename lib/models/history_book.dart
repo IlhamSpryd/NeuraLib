@@ -1,21 +1,21 @@
 // To parse this JSON data, do
 //
-//     final historyBook = historyBookFromJson(jsonString);
+//     final historybook = historybookFromJson(jsonString);
 
 import 'dart:convert';
 
-HistoryBook historyBookFromJson(String str) =>
-    HistoryBook.fromJson(json.decode(str));
+Historybook historybookFromJson(String str) =>
+    Historybook.fromJson(json.decode(str));
 
-String historyBookToJson(HistoryBook data) => json.encode(data.toJson());
+String historybookToJson(Historybook data) => json.encode(data.toJson());
 
-class HistoryBook {
+class Historybook {
   String? message;
   List<Datum>? data;
 
-  HistoryBook({this.message, this.data});
+  Historybook({this.message, this.data});
 
-  factory HistoryBook.fromJson(Map<String, dynamic> json) => HistoryBook(
+  factory Historybook.fromJson(Map<String, dynamic> json) => Historybook(
     message: json["message"],
     data: json["data"] == null
         ? []
@@ -32,10 +32,10 @@ class HistoryBook {
 
 class Datum {
   int? id;
-  String? userId;
-  String? bookId;
+  int? userId;
+  int? bookId;
   DateTime? borrowDate;
-  dynamic returnDate;
+  DateTime? returnDate;
   DateTime? createdAt;
   DateTime? updatedAt;
   Book? book;
@@ -58,7 +58,9 @@ class Datum {
     borrowDate: json["borrow_date"] == null
         ? null
         : DateTime.parse(json["borrow_date"]),
-    returnDate: json["return_date"],
+    returnDate: json["return_date"] == null
+        ? null
+        : DateTime.parse(json["return_date"]),
     createdAt: json["created_at"] == null
         ? null
         : DateTime.parse(json["created_at"]),
@@ -74,7 +76,8 @@ class Datum {
     "book_id": bookId,
     "borrow_date":
         "${borrowDate!.year.toString().padLeft(4, '0')}-${borrowDate!.month.toString().padLeft(2, '0')}-${borrowDate!.day.toString().padLeft(2, '0')}",
-    "return_date": returnDate,
+    "return_date":
+        "${returnDate!.year.toString().padLeft(4, '0')}-${returnDate!.month.toString().padLeft(2, '0')}-${returnDate!.day.toString().padLeft(2, '0')}",
     "created_at": createdAt?.toIso8601String(),
     "updated_at": updatedAt?.toIso8601String(),
     "book": book?.toJson(),
@@ -85,7 +88,7 @@ class Book {
   int? id;
   String? title;
   String? author;
-  int? stock; // ✅ Ubah dari String? menjadi int?
+  int? stock;
   DateTime? createdAt;
   DateTime? updatedAt;
 
@@ -93,7 +96,7 @@ class Book {
     this.id,
     this.title,
     this.author,
-    this.stock, // ✅ Sekarang int?
+    this.stock,
     this.createdAt,
     this.updatedAt,
   });
@@ -102,8 +105,7 @@ class Book {
     id: json["id"],
     title: json["title"],
     author: json["author"],
-    // ✅ FIX: Handle both String and int for stock
-    stock: _parseStock(json["stock"]),
+    stock: json["stock"],
     createdAt: json["created_at"] == null
         ? null
         : DateTime.parse(json["created_at"]),
@@ -111,19 +113,6 @@ class Book {
         ? null
         : DateTime.parse(json["updated_at"]),
   );
-
-  // ✅ Helper method untuk parse stock
-  static int? _parseStock(dynamic stockValue) {
-    if (stockValue == null) return null;
-
-    if (stockValue is int) {
-      return stockValue;
-    } else if (stockValue is String) {
-      return int.tryParse(stockValue);
-    } else {
-      return null;
-    }
-  }
 
   Map<String, dynamic> toJson() => {
     "id": id,

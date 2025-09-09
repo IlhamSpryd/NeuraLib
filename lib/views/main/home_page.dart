@@ -19,7 +19,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  late Future<ListBookItem?> _booksFuture;
+  late Future<Listbook?> _booksFuture; // Ubah ke Listbook
   final TextEditingController _searchTextController = TextEditingController();
   String _searchQuery = "";
   String? _userName;
@@ -156,7 +156,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   // Navigasi ke detail buku dengan coverUrl
-  void _navigateToBookDetail(BookDatum book) {
+  void _navigateToBookDetail(Item book) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -280,10 +280,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-            ),
-            backgroundColor: Colors.red.shade400,
+            content: Text('Gagal meminjam buku: $e'),
+            backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -362,7 +360,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-  void _navigateToEditBook(BookDatum book) {
+  void _navigateToEditBook(Item book) {
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -871,7 +869,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
-              child: FutureBuilder<ListBookItem?>(
+              child: FutureBuilder<Listbook?>(
                 future: _booksFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -879,11 +877,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   } else if (snapshot.hasError) {
                     return _buildErrorState(snapshot.error);
                   } else if (!snapshot.hasData ||
-                      snapshot.data?.data == null ||
-                      snapshot.data!.data!.isEmpty) {
+                      snapshot.data?.data?.items == null ||
+                      snapshot.data!.data!.items!.isEmpty) {
                     return _buildEmptyState();
                   } else {
-                    final books = snapshot.data!.data!;
+                    final books = snapshot.data!.data!.items!;
                     return SlideTransition(
                       position: _slideAnimation,
                       child: BookGrid(

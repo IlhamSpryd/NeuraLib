@@ -1,16 +1,21 @@
 // history_api.dart
 import 'dart:convert';
+
 import 'package:athena/preference/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'endpoint.dart';
+
 import '../models/history_book.dart';
+import 'endpoint.dart';
 
 class HistoryApi {
   // Header dengan token
   static Future<Map<String, String>> _headers() async {
     final token = await SharedPreferencesHelper.getToken();
     if (token == null) throw Exception("No token found, please login first");
-    return {"Authorization": "Bearer $token"};
+    return {
+      "Authorization": "Bearer $token",
+      "Content-Type": "application/json",
+    };
   }
 
   // General request handler
@@ -33,7 +38,7 @@ class HistoryApi {
   }
 
   // Get history by user ID
-  static Future<HistoryBook?> getHistory(int userId) async {
+  static Future<Historybook> getHistory(int userId) async {
     try {
       final response = await _request(() async {
         return http.get(
@@ -41,14 +46,16 @@ class HistoryApi {
           headers: await _headers(),
         );
       });
-      return historyBookFromJson(response.body);
+
+      // Parse JSON string to Historybook object
+      return historybookFromJson(response.body);
     } catch (e) {
       rethrow;
     }
   }
 
   // Get current user's history
-  static Future<HistoryBook?> getMyHistory() async {
+  static Future<Historybook> getMyHistory() async {
     try {
       final userId = await SharedPreferencesHelper.getUserId();
       if (userId == null) throw Exception("User ID not found");

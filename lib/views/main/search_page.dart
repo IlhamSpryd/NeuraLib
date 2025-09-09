@@ -12,7 +12,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _controller = TextEditingController();
-  List<BookDatum> _results = [];
+  List<Item> _results = []; // Ubah dari BookDatum ke Item
   bool _isLoading = false;
 
   void _onSearch(String query) async {
@@ -28,9 +28,9 @@ class _SearchPageState extends State<SearchPage> {
     try {
       final result = await BookApi.getBooks(search: query);
 
-      if (result != null && result.data != null) {
+      if (result != null && result.data != null && result.data!.items != null) {
         setState(() {
-          _results = result.data!;
+          _results = result.data!.items!;
         });
       } else {
         setState(() {
@@ -53,7 +53,8 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  Widget _buildBookCard(BookDatum book) {
+  Widget _buildBookCard(Item book) {
+    // Ubah dari BookDatum ke Item
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 0,

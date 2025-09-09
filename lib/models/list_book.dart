@@ -1,96 +1,93 @@
-// list_book.dart
+// To parse this JSON data, do
+//
+//     final listbook = listbookFromJson(jsonString);
+
 import 'dart:convert';
 
-ListBookItem listBookItemFromJson(String str) =>
-    ListBookItem.fromJson(json.decode(str));
-String listBookItemToJson(ListBookItem data) => json.encode(data.toJson());
+Listbook listbookFromJson(String str) => Listbook.fromJson(json.decode(str));
 
-class ListBookItem {
+String listbookToJson(Listbook data) => json.encode(data.toJson());
+
+class Listbook {
   String? message;
-  List<BookDatum>? data;
+  Data? data;
+
+  Listbook({this.message, this.data});
+
+  factory Listbook.fromJson(Map<String, dynamic> json) => Listbook(
+    message: json["message"],
+    data: json["data"] == null ? null : Data.fromJson(json["data"]),
+  );
+
+  Map<String, dynamic> toJson() => {"message": message, "data": data?.toJson()};
+}
+
+class Data {
+  List<Item>? items;
   Meta? meta;
 
-  ListBookItem({this.message, this.data, this.meta});
+  Data({this.items, this.meta});
 
-  factory ListBookItem.fromJson(Map<String, dynamic> json) => ListBookItem(
-    message: json["message"],
-    data: json["data"] == null || json["data"]["items"] == null
+  factory Data.fromJson(Map<String, dynamic> json) => Data(
+    items: json["items"] == null
         ? []
-        : List<BookDatum>.from(
-            json["data"]["items"]!.map((x) => BookDatum.fromJson(x)),
-          ),
-    meta: json["data"] == null || json["data"]["meta"] == null
-        ? null
-        : Meta.fromJson(json["data"]["meta"]),
+        : List<Item>.from(json["items"]!.map((x) => Item.fromJson(x))),
+    meta: json["meta"] == null ? null : Meta.fromJson(json["meta"]),
   );
 
   Map<String, dynamic> toJson() => {
-    "message": message,
-    "data": data == null
+    "items": items == null
         ? []
-        : List<dynamic>.from(data!.map((x) => x.toJson())),
+        : List<dynamic>.from(items!.map((x) => x.toJson())),
     "meta": meta?.toJson(),
   };
 }
 
-class BookDatum {
+class Item {
   int? id;
   String? title;
   String? author;
   int? stock;
-  DateTime? createdAt;
-  DateTime? updatedAt;
   String? coverPath;
   String? coverUrl;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
-  BookDatum({
+  Item({
     this.id,
     this.title,
     this.author,
     this.stock,
-    this.createdAt,
-    this.updatedAt,
     this.coverPath,
     this.coverUrl,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  factory BookDatum.fromJson(Map<String, dynamic> json) => BookDatum(
+  factory Item.fromJson(Map<String, dynamic> json) => Item(
     id: json["id"],
     title: json["title"],
     author: json["author"],
-    stock: _parseStock(json["stock"]),
+    stock: json["stock"],
+    coverPath: json["cover_path"],
+    coverUrl: json["cover_url"],
     createdAt: json["created_at"] == null
         ? null
         : DateTime.parse(json["created_at"]),
     updatedAt: json["updated_at"] == null
         ? null
         : DateTime.parse(json["updated_at"]),
-    coverPath: json["cover_path"],
-    coverUrl: json["cover_url"],
   );
-
-  // Helper method untuk parse stock
-  static int? _parseStock(dynamic stockValue) {
-    if (stockValue == null) return null;
-
-    if (stockValue is int) {
-      return stockValue;
-    } else if (stockValue is String) {
-      return int.tryParse(stockValue);
-    } else {
-      return null;
-    }
-  }
 
   Map<String, dynamic> toJson() => {
     "id": id,
     "title": title,
     "author": author,
     "stock": stock,
-    "created_at": createdAt?.toIso8601String(),
-    "updated_at": updatedAt?.toIso8601String(),
     "cover_path": coverPath,
     "cover_url": coverUrl,
+    "created_at": createdAt?.toIso8601String(),
+    "updated_at": updatedAt?.toIso8601String(),
   };
 }
 

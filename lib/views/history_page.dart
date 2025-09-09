@@ -12,7 +12,7 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  late Future<HistoryBook?> _historyFuture;
+  late Future<Historybook> _historyFuture;
   bool _isLoading = false;
   bool _isMounted = false;
 
@@ -96,7 +96,7 @@ class _HistoryPageState extends State<HistoryPage> {
         foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: FutureBuilder<HistoryBook?>(
+      body: FutureBuilder<Historybook>(
         future: _historyFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -160,7 +160,7 @@ class _HistoryPageState extends State<HistoryPage> {
                           ),
                           if (isReturned)
                             Text(
-                              "Dikembalikan: ${_formatDate(item.returnDate is DateTime ? item.returnDate as DateTime? : null)}",
+                              "Dikembalikan: ${_formatDate(item.returnDate)}",
                               style: GoogleFonts.inter(),
                             ),
                           if (!isReturned)

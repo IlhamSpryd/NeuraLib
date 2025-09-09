@@ -1,7 +1,6 @@
 import 'dart:convert';
-import 'package:athena/models/add_book.dart';
-import 'package:athena/models/borrow_book.dart';
-import 'package:athena/models/delete_book.dart';
+import 'package:athena/models/addBook.dart';
+import 'package:athena/models/deleteBookModel.dart';
 import 'package:athena/models/list_book.dart';
 import 'package:athena/models/put_book.dart';
 import 'package:athena/preference/shared_preferences.dart';
@@ -39,7 +38,7 @@ class BookApi {
   }
 
   // 🔹 Add book
-  static Future<AddBook?> addBook({
+  static Future<Addbook?> addBook({
     required String title,
     required String author,
     required int stock,
@@ -53,14 +52,14 @@ class BookApi {
         );
       });
 
-      return addBookFromJson(response.body);
+      return addbookFromJson(response.body);
     } catch (e) {
       rethrow;
     }
   }
 
   // 🔹 Get all books dengan paging & search
-  static Future<ListBookItem?> getBooks({
+  static Future<Listbook?> getBooks({
     int page = 1,
     int limit = 20,
     String search = "",
@@ -77,14 +76,14 @@ class BookApi {
       // Debug print untuk melihat struktur response
       print('Books API Response: ${response.body}');
 
-      return listBookItemFromJson(response.body);
+      return listbookFromJson(response.body);
     } catch (e) {
       rethrow;
     }
   }
 
   // 🔹 Get book by ID
-  static Future<AddBook?> getBookById(int id) async {
+  static Future<Addbook?> getBookById(int id) async {
     try {
       final response = await _request(() async {
         return http.get(
@@ -93,7 +92,7 @@ class BookApi {
         );
       });
 
-      return addBookFromJson(response.body);
+      return addbookFromJson(response.body);
     } catch (e) {
       rethrow;
     }

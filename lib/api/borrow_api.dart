@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:athena/preference/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'endpoint.dart';
-import '../models/borrow_book.dart';
+import '../models/borrowBook.dart';
+import '../models/history_book.dart';
 
 class BorrowApi {
   // Header dengan token
@@ -61,6 +62,19 @@ class BorrowApi {
         );
       });
       return borrowBookFromJson(response.body);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Get borrowed books for current user
+  static Future<Historybook?> getBorrowedBooks() async {
+    try {
+      final response = await _request(() async {
+        return http.get(Uri.parse(Endpoint.borrow), headers: await _headers());
+      });
+
+      return historybookFromJson(response.body);
     } catch (e) {
       rethrow;
     }
