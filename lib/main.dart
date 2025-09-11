@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:athena/authWrapper.dart';
 import 'package:athena/views/auth/login_page.dart';
 import 'package:athena/views/auth/register_page.dart';
@@ -154,9 +153,9 @@ class _NeuraLibAppState extends State<NeuraLibApp>
     return baseTheme.copyWith(
       colorScheme:
           ColorScheme.fromSeed(
-            seedColor: const Color(0xFF6C63FF),
-            primary: const Color(0xFF8B7EFF),
-            secondary: const Color(0xFF00F5D4),
+            seedColor: const Color.fromRGBO(21, 77, 113, 1),
+            primary: const Color.fromRGBO(28, 110, 164, 1),
+            secondary: const Color.fromRGBO(51, 161, 224, 1),
             tertiary: const Color(0xFFFF85B3),
             surface: const Color(0xFF0A0B1E),
             background: const Color(0xFF060714),

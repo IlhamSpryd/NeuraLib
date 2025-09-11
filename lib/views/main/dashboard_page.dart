@@ -1,5 +1,3 @@
-import 'dart:ui'; // Add this import for ImageFilter
-
 import 'package:athena/utils/shared_preferences.dart';
 import 'package:athena/views/main/addBookPage.dart';
 import 'package:athena/views/main/home_page.dart';
@@ -63,61 +61,62 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       extendBody: true,
       body: _pages[_currentIndex],
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         height: 70,
         decoration: BoxDecoration(
-          // Efek kaca modern (glassmorphism)
-          color: Colors.black.withOpacity(0.40),
+          color: Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(50),
-          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
             ),
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(35),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Home Tab
-                _buildNavItem(
-                  index: 0,
-                  inactiveIcon: "assets/images/home1.png",
-                  activeIcon: "assets/images/home.png",
-                ),
-
-                // Add Tab
-                _buildNavItem(
-                  index: 1,
-                  inactiveIcon: "assets/images/add1.png",
-                  activeIcon: "assets/images/add.png",
-                ),
-                // inbox tab
-                _buildNavItem(
-                  index: 2,
-                  inactiveIcon: "assets/images/inbox-full.png",
-                  activeIcon: "assets/images/inbox-full (1).png",
-                ),
-
-                // Profile Tab
-                _buildNavItem(
-                  index: 3,
-                  inactiveIcon: "assets/images/user.png",
-                  activeIcon: "assets/images/user1.png",
-                ),
-              ],
-            ),
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.primary.withOpacity(0.9),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Home Tab
+            _buildNavItem(
+              index: 0,
+              inactiveIcon: "assets/images/home1.png",
+              activeIcon: "assets/images/home.png",
+            ),
+
+            // Add Tab
+            _buildNavItem(
+              index: 1,
+              inactiveIcon: "assets/images/add1.png",
+              activeIcon: "assets/images/add.png",
+            ),
+            // inbox tab
+            _buildNavItem(
+              index: 2,
+              inactiveIcon: "assets/images/inbox-full.png",
+              activeIcon: "assets/images/inbox-full (1).png",
+            ),
+
+            // Profile Tab
+            _buildNavItem(
+              index: 3,
+              inactiveIcon: "assets/images/user.png",
+              activeIcon: "assets/images/user1.png",
+            ),
+          ],
         ),
       ),
     );
@@ -136,7 +135,7 @@ class _DashboardPageState extends State<DashboardPage> {
         height: 50,
         decoration: BoxDecoration(
           color: _currentIndex == index
-              ? Colors.white.withOpacity(0.3)
+              ? Colors.white.withOpacity(0.25)
               : Colors.transparent,
           shape: BoxShape.circle,
           border: _currentIndex == index
@@ -145,15 +144,13 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         child: Center(
           child: SizedBox(
-            width: 22,
-            height: 22,
+            width: 24, // Slightly larger for better visibility
+            height: 24,
             child: Image.asset(
               _currentIndex == index ? activeIcon : inactiveIcon,
-              width: 22,
-              height: 22,
               color: _currentIndex == index
                   ? Colors.white
-                  : Colors.white.withOpacity(0.7),
+                  : Colors.white.withOpacity(0.8),
             ),
           ),
         ),

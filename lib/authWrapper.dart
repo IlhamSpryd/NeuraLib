@@ -51,7 +51,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
       return const Scaffold(body: SizedBox.shrink());
     }
 
-    // 🚀 alur utama
+    // alur utama
     if (!_onboardingCompleted) {
       return const OnboardingScreen();
     }

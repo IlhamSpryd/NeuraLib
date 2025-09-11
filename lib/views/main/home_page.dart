@@ -763,33 +763,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      floatingActionButton: AnimatedBuilder(
-        animation: _pulseAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _pulseAnimation.value,
-            child: _buildGlassMorphicContainer(
-              blur: 20,
-              opacity: 0.2,
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-              child: FloatingActionButton.large(
-                onPressed: _navigateToAddBook,
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                child: Icon(Icons.add_rounded, size: 32, color: Colors.white),
-              ),
-            ),
-          );
-        },
-      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -868,7 +841,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Welcome, ${_userName ?? 'User'}',
+                                          'Hello, ${_userName ?? 'User'}',
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 28,
@@ -911,7 +884,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 32),
+                              const SizedBox(height: 30),
                               GestureDetector(
                                 onTap: _navigateToSearchPage,
                                 child: _buildGlassMorphicContainer(
@@ -958,7 +931,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: SlideTransition(
                   position: _slideAnimation,
                   child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 25),
                     child: carousel.CarouselBanner(),
                   ),
                 ),
@@ -1014,45 +987,44 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return _buildGlassMorphicContainer(
-          blur: 30,
-          opacity: 0.1,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                const SizedBox(height: 24),
-                _buildMenuTile(
-                  icon: Icons.person_rounded,
-                  title: 'Neural Profile',
-                  onTap: () => Navigator.pop(context),
-                ),
-                _buildMenuTile(
-                  icon: Icons.settings_rounded,
-                  title: 'System Settings',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/settings');
-                  },
-                ),
-                _buildMenuTile(
-                  icon: Icons.logout_rounded,
-                  title: 'Disconnect',
-                  isDestructive: true,
-                  onTap: () => Navigator.pop(context),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 24),
+              _buildMenuTile(
+                icon: Icons.person_rounded,
+                title: 'Neural Profile',
+                onTap: () => Navigator.pop(context),
+              ),
+              _buildMenuTile(
+                icon: Icons.settings_rounded,
+                title: 'System Settings',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/settings');
+                },
+              ),
+              _buildMenuTile(
+                icon: Icons.logout_rounded,
+                title: 'Disconnect',
+                isDestructive: true,
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
           ),
         );
       },
@@ -1067,28 +1039,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
-      child: _buildGlassMorphicContainer(
-        blur: 20,
-        opacity: 0.05,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(50),
+        ),
         child: ListTile(
           leading: Icon(
             icon,
             color: isDestructive
-                ? Colors.red.shade300
+                ? Colors.red
                 : Theme.of(context).colorScheme.primary,
           ),
           title: Text(
             title,
             style: TextStyle(
               color: isDestructive
-                  ? Colors.red.shade300
+                  ? Colors.red
                   : Theme.of(context).textTheme.titleMedium?.color,
               fontWeight: FontWeight.w500,
             ),
           ),
           onTap: onTap,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(50),
           ),
         ),
       ),

@@ -171,9 +171,9 @@ class _AddBookPageState extends State<AddBookPage>
                   padding: const EdgeInsets.all(20),
                   child: Text(
                     'Pilih Gambar Cover',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(color: Colors.white),
                   ),
                 ),
                 Row(
@@ -211,43 +211,42 @@ class _AddBookPageState extends State<AddBookPage>
   }
 
   Widget _buildImageOption({
-  required IconData icon,
-  required String label,
-  required VoidCallback onTap,
-  Color iconColor = Colors.white,
-  Color textColor = Colors.white, 
-}) {
-  return GestureDetector(
-    onTap: onTap,
-    child: _buildGlassMorphicContainer(
-      blur: 15,
-      opacity: 0.1,
-      child: Container(
-        width: 100,
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: iconColor, // 👈 pake warna dari parameter
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: textColor, // 👈 pake warna dari parameter
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color iconColor = Colors.white,
+    Color textColor = Colors.white,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: _buildGlassMorphicContainer(
+        blur: 15,
+        opacity: 0.1,
+        child: Container(
+          width: 100,
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 32,
+                color: iconColor, // 👈 pake warna dari parameter
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: textColor, // 👈 pake warna dari parameter
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Future<void> _saveBook() async {
     if (!_formKey.currentState!.validate()) {
