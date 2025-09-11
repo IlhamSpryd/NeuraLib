@@ -1,6 +1,7 @@
 import 'package:athena/views/auth/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingItem {
@@ -28,19 +29,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingItem> _onboardingData = [
     OnboardingItem(
-      image: 'assets/onboarding.png',
+      image: 'assets/lottie/onboard1.json',
       title: 'Selamat Datang di NeuraLib',
       description:
           'Temukan berbagai koleksi buku terbaru dan terlengkap untuk kebutuhan membaca Anda.',
     ),
     OnboardingItem(
-      image: 'assets/onboarding.png',
+      image: 'assets/lottie/onboard2.json',
       title: 'Pinjam Buku dengan Mudah',
       description:
           'Proses peminjaman buku yang cepat dan praktis hanya dengan beberapa ketukan.',
     ),
     OnboardingItem(
-      image: 'assets/onboarding.png',
+      image: 'assets/lottie/onboard3.json',
       title: 'Kelola Koleksi Anda',
       description:
           'Simpan riwayat peminjaman dan kelola buku favorit Anda dengan mudah.',
@@ -129,9 +130,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 style: GoogleFonts.inter(color: primaryColor),
               ),
             ),
-
           const Spacer(),
-
           ElevatedButton(
             onPressed: () {
               if (_currentPage == _onboardingData.length - 1) {
@@ -199,7 +198,10 @@ class SingleOnboardingPage extends StatelessWidget {
               color: primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(Icons.menu_book, size: 60, color: primaryColor),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Lottie.asset(item.image, fit: BoxFit.contain),
+            ),
           ),
           const SizedBox(height: 40),
           Text(

@@ -50,6 +50,9 @@ flutter:
     - assets/images/inbox-full.png
     - assets/lottie/splashscreen.json
     - assets/lottie/books.json
+    - assets/lottie/onboard1.json
+    - assets/lottie/onboard2.json
+    - assets/lottie/onboard3.json
 
   fonts:
     - family: Montserrat

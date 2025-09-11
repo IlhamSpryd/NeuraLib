@@ -1,13 +1,16 @@
+// book_api.dart
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:athena/models/addBook.dart';
 import 'package:athena/models/borrowBook.dart';
 import 'package:athena/models/deleteBookModel.dart';
 import 'package:athena/models/history_book.dart';
 import 'package:athena/models/list_book.dart';
-import 'package:athena/models/put_book.dart';
+import 'package:athena/models/returnBook.dart';
 import 'package:athena/models/updateBookModel.dart';
 import 'package:athena/utils/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'endpoint.dart';
@@ -36,7 +39,6 @@ class BookApi {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return response;
       } else {
-        // Coba parsing error message dari response
         String errorMessage = "Unknown error occurred";
         try {
           final Map<String, dynamic> errorResponse = json.decode(response.body);
@@ -50,11 +52,14 @@ class BookApi {
         throw Exception("HTTP ${response.statusCode}: $errorMessage");
       }
     } on http.ClientException catch (e) {
+      debugPrint("Network error: $e");
       throw Exception("Network error: $e");
     } on SocketException catch (e) {
+      debugPrint("Connection error: $e");
       throw Exception("Connection error: $e");
     } catch (e) {
-      throw Exception("Request failed: $e");
+      debugPrint("Request failed: $e");
+      rethrow;
     }
   }
 
@@ -71,27 +76,25 @@ class BookApi {
     try {
       final response = await _request(() async {
         final body = {"title": title, "author": author, "stock": stock};
-
-        // Tambahkan field opsional hanya jika tidak null
         if (coverUrl != null) body["cover_url"] = coverUrl;
         if (categoryId != null) body["category_id"] = categoryId.toString();
         if (description != null) body["description"] = description;
         if (isbn != null) body["isbn"] = isbn;
 
+        debugPrint("Adding book to: ${Endpoint.books}");
         return http.post(
           Uri.parse(Endpoint.books),
           headers: await _headers(json: true),
           body: jsonEncode(body),
         );
       });
-
       return addbookFromJson(response.body);
     } catch (e) {
       rethrow;
     }
   }
 
-  // Get all books dengan paging, search, dan filter
+  // Get all books with pagination, search, and filter
   static Future<Listbook> getBooks({
     int page = 1,
     int limit = 20,
@@ -117,6 +120,7 @@ class BookApi {
         Endpoint.books,
       ).replace(queryParameters: queryParams);
 
+      debugPrint("Getting books from: $uri");
       final response = await _request(() async {
         return http.get(uri, headers: await _headers());
       });
@@ -134,6 +138,7 @@ class BookApi {
         Endpoint.booksPopular,
       ).replace(queryParameters: {"limit": limit.toString()});
 
+      debugPrint("Getting popular books from: $uri");
       final response = await _request(() async {
         return http.get(uri, headers: await _headers());
       });
@@ -151,6 +156,7 @@ class BookApi {
         Endpoint.booksRecent,
       ).replace(queryParameters: {"limit": limit.toString()});
 
+      debugPrint("Getting recent books from: $uri");
       final response = await _request(() async {
         return http.get(uri, headers: await _headers());
       });
@@ -164,11 +170,11 @@ class BookApi {
   // Get book by ID
   static Future<Addbook> getBookById(int id) async {
     try {
+      final uri = Uri.parse(Endpoint.bookDetail(id));
+      debugPrint("Getting book by ID from: $uri");
+
       final response = await _request(() async {
-        return http.get(
-          Uri.parse(Endpoint.bookDetail(id)),
-          headers: await _headers(),
-        );
+        return http.get(uri, headers: await _headers());
       });
 
       return addbookFromJson(response.body);
@@ -191,20 +197,20 @@ class BookApi {
     try {
       final response = await _request(() async {
         final body = {"title": title, "author": author, "stock": stock};
-
-        // Tambahkan field opsional hanya jika tidak null
         if (coverUrl != null) body["cover_url"] = coverUrl;
         if (categoryId != null) body["category_id"] = categoryId.toString();
         if (description != null) body["description"] = description;
         if (isbn != null) body["isbn"] = isbn;
 
+        final uri = Uri.parse(Endpoint.updateBook(id));
+        debugPrint("Updating book at: $uri");
+
         return http.put(
-          Uri.parse(Endpoint.updateBook(id)),
+          uri,
           headers: await _headers(json: true),
           body: jsonEncode(body),
         );
       });
-
       return updateBookFromJson(response.body);
     } catch (e) {
       rethrow;
@@ -214,11 +220,11 @@ class BookApi {
   // Delete book
   static Future<DeleteBook> deleteBook(int id) async {
     try {
+      final uri = Uri.parse(Endpoint.deleteBook(id));
+      debugPrint("Deleting book at: $uri");
+
       final response = await _request(() async {
-        return http.delete(
-          Uri.parse(Endpoint.deleteBook(id)),
-          headers: await _headers(),
-        );
+        return http.delete(uri, headers: await _headers());
       });
       return deleteBookFromJson(response.body);
     } catch (e) {
@@ -239,6 +245,7 @@ class BookApi {
           body["borrow_date"] = borrowDate.toIso8601String();
         }
 
+        debugPrint("Borrowing book from: ${Endpoint.borrow}");
         return http.post(
           Uri.parse(Endpoint.borrow),
           headers: await _headers(json: true),
@@ -253,7 +260,7 @@ class BookApi {
   }
 
   // Return book
-  static Future<PutBook> returnBook(
+  static Future<ReturnData> returnBook(
     int borrowId, {
     DateTime? returnDate,
   }) async {
@@ -265,14 +272,17 @@ class BookApi {
           body["return_date"] = returnDate.toIso8601String();
         }
 
+        final uri = Uri.parse(Endpoint.returnBook(borrowId));
+        debugPrint("Returning book at: $uri");
+
         return http.put(
-          Uri.parse(Endpoint.returnBook(borrowId)),
+          uri,
           headers: await _headers(json: true),
           body: jsonEncode(body),
         );
       });
-
-      return putBookFromJson(response.body);
+      final result = returnBooksResponseFromJson(response.body);
+      return result.data;
     } catch (e) {
       rethrow;
     }
@@ -281,13 +291,13 @@ class BookApi {
   // Get my borrows (active)
   static Future<Historybook> getMyBorrows() async {
     try {
-      final response = await _request(() async {
-        return http.get(
-          Uri.parse(Endpoint.myBorrows),
-          headers: await _headers(),
-        );
-      });
+      // Mengubah endpoint menjadi yang paling mungkin benar
+      final uri = Uri.parse(Endpoint.borrowsActive);
+      debugPrint("Getting my borrows from: $uri");
 
+      final response = await _request(() async {
+        return http.get(uri, headers: await _headers());
+      });
       return historybookFromJson(response.body);
     } catch (e) {
       rethrow;
@@ -297,13 +307,12 @@ class BookApi {
   // Get borrow history
   static Future<Historybook> getBorrowHistory() async {
     try {
-      final response = await _request(() async {
-        return http.get(
-          Uri.parse(Endpoint.myHistory),
-          headers: await _headers(),
-        );
-      });
+      final uri = Uri.parse(Endpoint.myHistory);
+      debugPrint("Getting borrow history from: $uri");
 
+      final response = await _request(() async {
+        return http.get(uri, headers: await _headers());
+      });
       return historybookFromJson(response.body);
     } catch (e) {
       rethrow;
@@ -313,11 +322,10 @@ class BookApi {
   // Upload book cover image
   static Future<String> uploadBookCover(File imageFile) async {
     try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse(Endpoint.uploadCover),
-      );
+      final uri = Uri.parse(Endpoint.uploadCover);
+      debugPrint("Uploading book cover to: $uri");
 
+      var request = http.MultipartRequest('POST', uri);
       request.headers.addAll(await _headers());
       request.files.add(
         await http.MultipartFile.fromPath(
@@ -326,7 +334,6 @@ class BookApi {
           filename: 'book_cover_${DateTime.now().millisecondsSinceEpoch}.jpg',
         ),
       );
-
       var response = await request.send();
       var responseData = await response.stream.bytesToString();
 
@@ -346,13 +353,12 @@ class BookApi {
   // Get borrow detail
   static Future<Historybook> getBorrowDetail(int borrowId) async {
     try {
-      final response = await _request(() async {
-        return http.get(
-          Uri.parse(Endpoint.borrowDetail(borrowId)),
-          headers: await _headers(),
-        );
-      });
+      final uri = Uri.parse(Endpoint.borrowDetail(borrowId));
+      debugPrint("Getting borrow detail from: $uri");
 
+      final response = await _request(() async {
+        return http.get(uri, headers: await _headers());
+      });
       return historybookFromJson(response.body);
     } catch (e) {
       rethrow;

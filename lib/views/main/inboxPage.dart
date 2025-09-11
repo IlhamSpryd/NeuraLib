@@ -1,4 +1,4 @@
-import 'package:athena/api/api_service.dart';
+import 'package:athena/api/book_api.dart';
 import 'package:athena/models/history_book.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,7 +11,7 @@ class InboxPage extends StatefulWidget {
 }
 
 class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
-  late Future<Historybook?> _borrowedBooksFuture;
+  late Future<Historybook> _borrowedBooksFuture;
   final Map<int, bool> _returningStates = {};
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -99,7 +99,7 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Gagal mengembalikan buku',
+                  'Gagal mengembalikan buku: ${e.toString()}',
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -138,26 +138,12 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
           'Buku yang Dipinjam',
           style: theme.textTheme.headlineLarge?.copyWith(fontSize: 22),
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
-            ),
-            child: IconButton(
-              icon: Icon(Icons.refresh_rounded, color: colorScheme.primary),
-              onPressed: _loadBorrowedBooks,
-            ),
-          ),
-        ],
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: _slideAnimation,
-          child: FutureBuilder<Historybook?>(
+          child: FutureBuilder<Historybook>(
             future: _borrowedBooksFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -165,7 +151,7 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
               }
 
               if (snapshot.hasError) {
-                return _buildErrorState();
+                return _buildErrorState(snapshot.error.toString());
               }
 
               if (!snapshot.hasData ||
@@ -175,7 +161,16 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
               }
 
               final borrowedBooks = snapshot.data!.data!;
-              return _buildBooksList(borrowedBooks);
+              // Filter hanya buku yang belum dikembalikan (returnDate == null)
+              final activeBorrows = borrowedBooks
+                  .where((book) => book.returnDate == null)
+                  .toList();
+
+              if (activeBorrows.isEmpty) {
+                return _buildEmptyState();
+              }
+
+              return _buildBooksList(activeBorrows);
             },
           ),
         ),
@@ -214,7 +209,7 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(String error) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -256,6 +251,16 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge,
             ),
+            if (error.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                error,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.tertiary,
+                ),
+              ),
+            ],
             const SizedBox(height: 32),
             Container(
               decoration: BoxDecoration(
@@ -345,13 +350,12 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBooksList(List<dynamic> borrowedBooks) {
+  Widget _buildBooksList(List<Datum> borrowedBooks) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: borrowedBooks.length,
       itemBuilder: (context, index) {
         final book = borrowedBooks[index];
-        final isReturned = book.returnDate != null;
         final isReturning = _returningStates[book.id] ?? false;
 
         return TweenAnimationBuilder(
@@ -362,7 +366,7 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
               offset: Offset(0, 50 * (1 - value)),
               child: Opacity(
                 opacity: value,
-                child: _buildBookCard(book, isReturned, isReturning),
+                child: _buildBookCard(book, isReturning),
               ),
             );
           },
@@ -371,7 +375,7 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBookCard(dynamic book, bool isReturned, bool isReturning) {
+  Widget _buildBookCard(Datum book, bool isReturning) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -381,9 +385,7 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isReturned
-              ? colorScheme.secondary.withOpacity(0.3)
-              : colorScheme.outline.withOpacity(0.2),
+          color: colorScheme.outline.withOpacity(0.2),
           width: 1.5,
         ),
         boxShadow: [
@@ -407,33 +409,22 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
                   height: 64,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: isReturned
-                          ? [
-                              colorScheme.secondary.withOpacity(0.2),
-                              colorScheme.secondary.withOpacity(0.1),
-                            ]
-                          : [
-                              colorScheme.primary.withOpacity(0.2),
-                              colorScheme.primary.withOpacity(0.1),
-                            ],
+                      colors: [
+                        colorScheme.primary.withOpacity(0.2),
+                        colorScheme.primary.withOpacity(0.1),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: isReturned
-                          ? colorScheme.secondary.withOpacity(0.3)
-                          : colorScheme.primary.withOpacity(0.3),
+                      color: colorScheme.primary.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
                   child: Icon(
-                    isReturned
-                        ? Icons.check_circle_rounded
-                        : Icons.book_outlined,
-                    color: isReturned
-                        ? colorScheme.secondary
-                        : colorScheme.primary,
+                    Icons.book_outlined,
+                    color: colorScheme.primary,
                     size: 32,
                   ),
                 ),
@@ -444,12 +435,9 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
                     children: [
                       Text(
                         book.book?.title ?? 'Judul tidak tersedia',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          decoration: isReturned
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
-                          decorationColor: theme.textTheme.bodyMedium?.color,
-                        ),
+                        style: theme.textTheme.titleLarge,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -457,6 +445,8 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
                         style: theme.textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -477,7 +467,7 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
                       ),
                     ),
                   )
-                else if (!isReturned)
+                else
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -502,19 +492,6 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
                       ),
                       tooltip: 'Kembalikan Buku',
                     ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.secondary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.check_circle_rounded,
-                      color: colorScheme.secondary,
-                      size: 28,
-                    ),
                   ),
               ],
             ),
@@ -526,22 +503,10 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
               ),
-              child: Column(
-                children: [
-                  _buildDateRow(
-                    'Tanggal Pinjam',
-                    _formatDate(book.borrowDate),
-                    Icons.calendar_today_rounded,
-                  ),
-                  if (isReturned) ...[
-                    const SizedBox(height: 16),
-                    _buildDateRow(
-                      'Tanggal Kembali',
-                      _formatDate(book.returnDate!),
-                      Icons.event_available_rounded,
-                    ),
-                  ],
-                ],
+              child: _buildDateRow(
+                'Tanggal Pinjam',
+                _formatDate(book.borrowDate),
+                Icons.calendar_today_rounded,
               ),
             ),
             const SizedBox(height: 20),
@@ -549,23 +514,16 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: isReturned
-                      ? [
-                          colorScheme.secondary.withOpacity(0.15),
-                          colorScheme.secondary.withOpacity(0.05),
-                        ]
-                      : [
-                          colorScheme.tertiary.withOpacity(0.15),
-                          colorScheme.tertiary.withOpacity(0.05),
-                        ],
+                  colors: [
+                    colorScheme.tertiary.withOpacity(0.15),
+                    colorScheme.tertiary.withOpacity(0.05),
+                  ],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isReturned
-                      ? colorScheme.secondary.withOpacity(0.3)
-                      : colorScheme.tertiary.withOpacity(0.3),
+                  color: colorScheme.tertiary.withOpacity(0.3),
                 ),
               ),
               child: Row(
@@ -575,21 +533,17 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: isReturned
-                          ? colorScheme.secondary
-                          : colorScheme.tertiary,
+                      color: colorScheme.tertiary,
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    isReturned ? 'TELAH DIKEMBALIKAN' : 'BELUM DIKEMBALIKAN',
+                    'SEDANG DIPINJAM',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: isReturned
-                          ? colorScheme.secondary
-                          : colorScheme.tertiary,
+                      color: colorScheme.tertiary,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -615,10 +569,12 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
             fontWeight: FontWeight.w500,
           ),
         ),
-        Text(
-          date,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.w600,
+        Expanded(
+          child: Text(
+            date,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

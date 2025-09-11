@@ -84,19 +84,31 @@ class _NeuraLibAppState extends State<NeuraLibApp>
     );
 
     return baseTheme.copyWith(
-      colorScheme:
-          ColorScheme.fromSeed(
-            seedColor: const Color(0xFF6C63FF),
-            primary: const Color(0xFF6C63FF),
-            secondary: const Color(0xFF00D2BE),
-            tertiary: const Color(0xFFFF6B9D),
-            surface: const Color(0xFFFAFAFF),
-            background: const Color(0xFFF5F7FF),
-            brightness: Brightness.light,
-          ).copyWith(
-            surfaceContainerHighest: const Color(0xFFE8ECFF),
-            outline: const Color(0xFFD0D5FF),
-          ),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF6C63FF),
+        primary: const Color(0xFF6C63FF),
+        secondary: const Color(0xFF00D2BE),
+        tertiary: const Color(0xFFFF6B9D),
+        surface: const Color(0xFFFFFFFF),
+        surfaceVariant: const Color(0xFFF5F7FF),
+        background: const Color(0xFFFAFAFA),
+        onSurface: const Color(0xFF1A1B3A),
+        onBackground: const Color(0xFF1A1B3A),
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: const Color(0xFFFAFAFA),
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFF6C63FF),
+        foregroundColor: Colors.white,
+        elevation: 1,
+        surfaceTintColor: Colors.transparent,
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        color: const Color(0x4D1A1B3A),
+        surfaceTintColor: Colors.transparent,
+      ),
       textTheme: TextTheme(
         displayLarge: GoogleFonts.orbitron(
           fontSize: 32,
@@ -135,11 +147,37 @@ class _NeuraLibAppState extends State<NeuraLibApp>
           color: Colors.white,
         ),
       ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        color: const Color(0x4D1A1B3A),
-        surfaceTintColor: Colors.transparent,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF6C63FF),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: const Color(0xFF6C63FF)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.grey[50],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: Colors.grey[200],
+        thickness: 1,
+        space: 1,
       ),
     );
   }
@@ -151,19 +189,31 @@ class _NeuraLibAppState extends State<NeuraLibApp>
     );
 
     return baseTheme.copyWith(
-      colorScheme:
-          ColorScheme.fromSeed(
-            seedColor: const Color.fromRGBO(21, 77, 113, 1),
-            primary: const Color.fromRGBO(28, 110, 164, 1),
-            secondary: const Color.fromRGBO(51, 161, 224, 1),
-            tertiary: const Color(0xFFFF85B3),
-            surface: const Color(0xFF0A0B1E),
-            background: const Color(0xFF060714),
-            brightness: Brightness.dark,
-          ).copyWith(
-            surfaceContainerHighest: const Color(0xFF1A1B3A),
-            outline: const Color(0xFF2D2F4F),
-          ),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF6C63FF),
+        primary: const Color(0xFF6C63FF),
+        secondary: const Color(0xFF00D2BE),
+        tertiary: const Color(0xFFFF6B9D),
+        surface: const Color(0xFF1A1C2E),
+        surfaceVariant: const Color(0xFF25273C),
+        background: const Color(0xFF121420),
+        onSurface: const Color(0xFFE6E8FF),
+        onBackground: const Color(0xFFE6E8FF),
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF121420),
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFF1A1C2E),
+        foregroundColor: const Color(0xFFE6E8FF),
+        elevation: 1,
+        surfaceTintColor: Colors.transparent,
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        color: const Color(0x4D1A1B3A),
+        surfaceTintColor: Colors.transparent,
+      ),
       textTheme: TextTheme(
         displayLarge: GoogleFonts.orbitron(
           fontSize: 32,
@@ -199,14 +249,40 @@ class _NeuraLibAppState extends State<NeuraLibApp>
         labelLarge: GoogleFonts.inter(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF060714),
+          color: const Color(0xFF121420),
         ),
       ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        color: const Color(0x4D1A1B3A),
-        surfaceTintColor: Colors.transparent,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF6C63FF),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: const Color(0xFF6C63FF)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF25273C),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFF2D2F4F),
+        thickness: 1,
+        space: 1,
       ),
     );
   }
