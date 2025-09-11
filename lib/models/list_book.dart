@@ -65,19 +65,25 @@ class Item {
   });
 
   factory Item.fromJson(Map<String, dynamic> json) => Item(
-    id: json["id"],
+    id: _parseToInt(json["id"]),
     title: json["title"],
     author: json["author"],
-    stock: json["stock"],
+    stock: _parseToInt(json["stock"]),
     coverPath: json["cover_path"],
     coverUrl: json["cover_url"],
     createdAt: json["created_at"] == null
         ? null
-        : DateTime.parse(json["created_at"]),
+        : DateTime.tryParse(json["created_at"]),
     updatedAt: json["updated_at"] == null
         ? null
-        : DateTime.parse(json["updated_at"]),
+        : DateTime.tryParse(json["updated_at"]),
   );
+  static int? _parseToInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,
@@ -100,10 +106,10 @@ class Meta {
   Meta({this.currentPage, this.lastPage, this.perPage, this.total});
 
   factory Meta.fromJson(Map<String, dynamic> json) => Meta(
-    currentPage: json["current_page"],
-    lastPage: json["last_page"],
-    perPage: json["per_page"],
-    total: json["total"],
+    currentPage: _parseToInt(json["current_page"]),
+    lastPage: _parseToInt(json["last_page"]),
+    perPage: _parseToInt(json["per_page"]),
+    total: _parseToInt(json["total"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -112,4 +118,10 @@ class Meta {
     "per_page": perPage,
     "total": total,
   };
+  static int? _parseToInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
 }

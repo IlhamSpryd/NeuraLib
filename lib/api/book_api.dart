@@ -124,9 +124,11 @@ class BookApi {
       final response = await _request(() async {
         return http.get(uri, headers: await _headers());
       });
+      debugPrint("RAW RESPONSE: ${response.body}");
 
       return listbookFromJson(response.body);
     } catch (e) {
+      debugPrint("ERROR in getBooks: $e");
       rethrow;
     }
   }
@@ -275,11 +277,7 @@ class BookApi {
         final uri = Uri.parse(Endpoint.returnBook(borrowId));
         debugPrint("Returning book at: $uri");
 
-        return http.put(
-          uri,
-          headers: await _headers(json: true),
-          body: jsonEncode(body),
-        );
+        return http.get(uri, headers: await _headers(json: true));
       });
       final result = returnBooksResponseFromJson(response.body);
       return result.data;
@@ -307,7 +305,7 @@ class BookApi {
   // Get borrow history
   static Future<Historybook> getBorrowHistory() async {
     try {
-      final uri = Uri.parse(Endpoint.myHistory);
+      final uri = Uri.parse(Endpoint.history);
       debugPrint("Getting borrow history from: $uri");
 
       final response = await _request(() async {

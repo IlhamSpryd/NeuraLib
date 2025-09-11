@@ -29,9 +29,10 @@ class Endpoint {
   static const String borrowsActive = "$borrow/active";
 
   // History
-  static const String history = "$baseURL/history";
-  static String userHistory(int userId) => "$history/user/$userId";
-  static const String myHistory = "$history/my";
+  // static const String history = "$baseURL/history";
+  // static String userHistory(int userId) => "$history/user/$userId";
+  // static const String myHistory = "$history/my";
+   static const String history = '$baseURL/history'; // GET riwayat
 
   // Users
   static const String users = "$baseURL/users";
@@ -44,4 +45,6 @@ class Endpoint {
   static const String settingsProfile = "$settings/profile";
   static const String settingsPassword = "$settings/password";
   static const String settingsNotifications = "$settings/notifications";
+
+  
 }
