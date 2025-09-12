@@ -1,7 +1,6 @@
 import 'package:athena/utils/shared_preferences.dart';
-import 'package:athena/views/main/addBookPage.dart';
+import 'package:athena/views/main/history_page.dart';
 import 'package:athena/views/main/home_page.dart';
-import 'package:athena/views/main/inboxPage.dart';
 import 'package:athena/views/main/profile_page.dart';
 import 'package:flutter/material.dart';
 
@@ -18,8 +17,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const AddBookPage(),
-    const InboxPage(),
+    const HistoryPage(),
     const ProfilePage(),
   ];
 
@@ -81,7 +79,7 @@ class _DashboardPageState extends State<DashboardPage> {
           gradient: LinearGradient(
             colors: [
               Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.primary.withOpacity(0.9),
+              Theme.of(context).colorScheme.primary,
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -96,23 +94,16 @@ class _DashboardPageState extends State<DashboardPage> {
               inactiveIcon: "assets/images/home1.png",
               activeIcon: "assets/images/home.png",
             ),
-
-            // Add Tab
-            _buildNavItem(
-              index: 1,
-              inactiveIcon: "assets/images/add1.png",
-              activeIcon: "assets/images/add.png",
-            ),
             // inbox tab
             _buildNavItem(
-              index: 2,
+              index: 1,
               inactiveIcon: "assets/images/inbox-full.png",
               activeIcon: "assets/images/inbox-full (1).png",
             ),
 
             // Profile Tab
             _buildNavItem(
-              index: 3,
+              index: 2,
               inactiveIcon: "assets/images/user.png",
               activeIcon: "assets/images/user1.png",
             ),

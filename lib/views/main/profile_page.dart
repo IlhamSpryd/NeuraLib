@@ -170,16 +170,6 @@ class _ProfilePageState extends State<ProfilePage> {
               backgroundColor: surfaceColor,
               elevation: 0,
               automaticallyImplyLeading: false,
-              actions: [
-                IconButton(
-                  icon: Icon(
-                    Icons.refresh_rounded,
-                    color: onSurface.withOpacity(0.7),
-                    size: 24,
-                  ),
-                  onPressed: _refreshProfile,
-                ),
-              ],
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
                   return FlexibleSpaceBar(
@@ -461,6 +451,18 @@ class _ProfilePageState extends State<ProfilePage> {
             title: "Reading History",
             subtitle: "View your reading journey",
             onTap: () {},
+            onSurface: onSurface,
+            primaryColor: primaryColor,
+          ),
+          _buildDivider(onSurface),
+          _buildActionTile(
+            icon: Icons.add,
+            title: "Add Books",
+            subtitle: "View your reading journey",
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/addBooks');
+            },
             onSurface: onSurface,
             primaryColor: primaryColor,
           ),

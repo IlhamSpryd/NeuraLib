@@ -1,5 +1,5 @@
 import 'package:athena/api/book_api.dart';
-import 'package:athena/views/main/addBookPage.dart';
+import 'package:athena/views/add_book_page.dart';
 import 'package:flutter/material.dart';
 
 class BookDetailPage extends StatefulWidget {

@@ -103,7 +103,7 @@ class BookApi {
     }
   }
 
-  // Get all books with pagination, search, and filter
+  // Get all books
   static Future<Listbook> getBooks({
     int page = 1,
     int limit = 20,
@@ -138,46 +138,6 @@ class BookApi {
       return listbookFromJson(response.body);
     } catch (e) {
       debugPrint("ERROR in getBooks: $e");
-      rethrow;
-    }
-  }
-
-  // Get popular books
-  static Future<Listbook> getPopularBooks({int limit = 10}) async {
-    try {
-      final uri = Uri.parse(
-        Endpoint.booksPopular,
-      ).replace(queryParameters: {"limit": limit.toString()});
-
-      debugPrint("Getting popular books from: $uri");
-      final response = await _request(() async {
-        return http.get(uri, headers: await _headers());
-      });
-
-      debugPrint("Popular books response: ${response.body}");
-      return listbookFromJson(response.body);
-    } catch (e) {
-      debugPrint("Error getting popular books: $e");
-      rethrow;
-    }
-  }
-
-  // Get recent books
-  static Future<Listbook> getRecentBooks({int limit = 10}) async {
-    try {
-      final uri = Uri.parse(
-        Endpoint.booksRecent,
-      ).replace(queryParameters: {"limit": limit.toString()});
-
-      debugPrint("Getting recent books from: $uri");
-      final response = await _request(() async {
-        return http.get(uri, headers: await _headers());
-      });
-
-      debugPrint("Recent books response: ${response.body}");
-      return listbookFromJson(response.body);
-    } catch (e) {
-      debugPrint("Error getting recent books: $e");
       rethrow;
     }
   }
@@ -361,7 +321,7 @@ class BookApi {
   // Get active borrows
   static Future<Historybook> getActiveBorrows() async {
     try {
-      final uri = Uri.parse(Endpoint.borrowsActive);
+      final uri = Uri.parse(Endpoint.borrow);
       debugPrint("Getting active borrows from: $uri");
 
       final response = await _request(() async {

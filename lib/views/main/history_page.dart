@@ -4,23 +4,23 @@ import 'package:athena/utils/shared_preferences.dart';
 import 'package:athena/views/sub%20page/book_detail_page.dart';
 import 'package:flutter/material.dart';
 
-class InboxPage extends StatefulWidget {
-  const InboxPage({super.key});
+class HistoryPage extends StatefulWidget {
+  const HistoryPage({super.key});
 
   @override
-  State<InboxPage> createState() => _InboxPageState();
+  State<HistoryPage> createState() => _HistoryPageState();
 }
 
-class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
+class _HistoryPageState extends State<HistoryPage>
+    with TickerProviderStateMixin {
   late Future<Historybook> _activeBorrowsFuture;
   late Future<Historybook> _borrowHistoryFuture;
-  late Future<Historybook> _myBorrowsFuture;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
   late AnimationController _slideController;
   late Animation<Offset> _slideAnimation;
 
-  int _currentTabIndex = 0; // 0: Active, 1: History
+  int _currentTabIndex = 0;
   int? _currentUserId;
 
   @override
@@ -70,7 +70,6 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
     setState(() {
       _activeBorrowsFuture = BookApi.getActiveBorrows();
       _borrowHistoryFuture = BookApi.getBorrowHistory();
-      _myBorrowsFuture = BookApi.getMyBorrows();
     });
   }
 
@@ -233,7 +232,7 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
 
   Widget _buildActiveBorrows() {
     return FutureBuilder<Historybook>(
-      future: _myBorrowsFuture,
+      future: _activeBorrowsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingState();
@@ -249,9 +248,10 @@ class _InboxPageState extends State<InboxPage> with TickerProviderStateMixin {
           return _buildEmptyState('No active borrows');
         }
 
-        // Filter for active borrows (not returned)
+        // Filter for current user's active borrows
         final allBorrows = snapshot.data!.data!;
-        final activeBorrows = _filterActiveBorrows(allBorrows);
+        final myBorrows = _filterMyBorrows(allBorrows);
+        final activeBorrows = _filterActiveBorrows(myBorrows);
 
         if (activeBorrows.isEmpty) {
           return _buildEmptyState('No active borrows');

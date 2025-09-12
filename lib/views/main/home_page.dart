@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:athena/api/book_api.dart';
 import 'package:athena/models/list_book.dart';
 import 'package:athena/utils/shared_preferences.dart';
-import 'package:athena/views/main/addBookPage.dart';
+import 'package:athena/views/add_book_page.dart';
 import 'package:athena/views/sub%20page/book_detail_page.dart';
 import 'package:athena/views/sub%20page/search_page.dart';
 import 'package:athena/widgets/book_grid.dart';
@@ -457,7 +457,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
-  // Di home_page.dart - GUNAKAN _loadBooks yang sudah ada:
   void _navigateToAddBook() {
     Navigator.push(
       context,
@@ -466,7 +465,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     ).then((refreshed) {
       if (refreshed == true) {
-        _loadBooks(); 
+        _loadBooks();
       }
     });
   }
@@ -630,7 +629,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          "Reconnect Neural Link",
+                          "Reconnect",
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -978,15 +977,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _showUserMenu(BuildContext context) {
+    final theme = Theme.of(context);
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
       builder: (context) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          ),
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -995,19 +995,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: theme.dividerColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 24),
               _buildMenuTile(
-                icon: Icons.person_rounded,
-                title: 'Neural Profile',
-                onTap: () => Navigator.pop(context),
+                icon: Icons.person,
+                title: 'Profile',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/edit_profile');
+                },
               ),
               _buildMenuTile(
                 icon: Icons.settings_rounded,
-                title: 'System Settings',
+                title: 'Settings',
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.pushNamed(context, '/settings');
@@ -1015,7 +1018,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
               _buildMenuTile(
                 icon: Icons.logout_rounded,
-                title: 'Disconnect',
+                title: 'Logout',
                 isDestructive: true,
                 onTap: () => Navigator.pop(context),
               ),

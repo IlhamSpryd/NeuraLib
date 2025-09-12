@@ -1,7 +1,9 @@
 import 'package:athena/authWrapper.dart';
+import 'package:athena/views/add_book_page.dart';
 import 'package:athena/views/auth/login_page.dart';
 import 'package:athena/views/auth/register_page.dart';
 import 'package:athena/views/main/dashboard_page.dart';
+import 'package:athena/views/main/profile_page.dart';
 import 'package:athena/views/onboarding%20screen.dart';
 import 'package:athena/views/settings_page.dart';
 import 'package:athena/views/splash_screen.dart';
@@ -65,6 +67,8 @@ class _NeuraLibAppState extends State<NeuraLibApp>
             '/register': (context) => const RegisterPage(),
             '/dashboard': (context) => const DashboardPage(),
             '/edit_profile': (context) => const EditProfilePage(),
+            '/addBooks': (context) => const AddBookPage(),
+            '/profile': (context) => const ProfilePage(),
           },
         );
       },
@@ -80,10 +84,10 @@ class _NeuraLibAppState extends State<NeuraLibApp>
 
     return baseTheme.copyWith(
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF4285F4), // Google Blue
-        primary: const Color(0xFF4285F4), // Biru
-        secondary: const Color(0xFFEA4335), // Merah
-        tertiary: const Color(0xFFFBBC05), // Kuning
+        seedColor: const Color(0xFF4285F4), 
+        primary: const Color(0xFF4285F4), 
+        secondary: const Color(0xFFEA4335), 
+        tertiary: const Color(0xFFFBBC05), 
         surface: const Color(0xFFFFFFFF),
         background: const Color(0xFFF9FAFB),
         onSurface: const Color(0xFF202124),
@@ -146,7 +150,7 @@ class _NeuraLibAppState extends State<NeuraLibApp>
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Color(0xFF34A853), // Google Green
+        backgroundColor: Color(0xFF34A853),
         foregroundColor: Colors.white,
       ),
       textButtonTheme: TextButtonThemeData(
@@ -176,7 +180,6 @@ class _NeuraLibAppState extends State<NeuraLibApp>
     );
   }
 
-  // ---------- DARK THEME ----------
   ThemeData _buildDarkTheme() {
     final baseTheme = ThemeData(
       useMaterial3: true,
@@ -185,7 +188,7 @@ class _NeuraLibAppState extends State<NeuraLibApp>
 
     return baseTheme.copyWith(
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF34A853), // Google Green
+        seedColor: const Color(0xFF34A853),
         primary: const Color(0xFF34A853),
         secondary: const Color(0xFFEA4335),
         tertiary: const Color(0xFFFBBC05),
@@ -251,7 +254,7 @@ class _NeuraLibAppState extends State<NeuraLibApp>
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Color(0xFFFBBC05), // Yellow
+        backgroundColor: Color(0xFFFBBC05),
         foregroundColor: Colors.black,
       ),
       textButtonTheme: TextButtonThemeData(
