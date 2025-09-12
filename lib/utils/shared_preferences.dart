@@ -10,9 +10,6 @@ class SharedPreferencesHelper {
   static const String _keyDarkMode = "dark_mode";
   static const String _keyFavorites = "favorite_books";
 
-  // =========================
-  // 🔹 Token
-  // =========================
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyToken, token);
@@ -28,9 +25,6 @@ class SharedPreferencesHelper {
     await prefs.remove(_keyToken);
   }
 
-  // =========================
-  // 🔹 User Data
-  // =========================
   static Future<void> saveUser({
     required int id,
     required String name,
@@ -64,9 +58,6 @@ class SharedPreferencesHelper {
     await prefs.remove(_keyUserEmail);
   }
 
-  // =========================
-  // 🔹 Dark Mode
-  // =========================
   static Future<void> setDarkMode(bool isDark) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyDarkMode, isDark);
@@ -77,9 +68,6 @@ class SharedPreferencesHelper {
     return prefs.getBool(_keyDarkMode) ?? false; // default: light
   }
 
-  // =========================
-  // 🔹 Onboarding
-  // =========================
   static Future<void> setOnboardingCompleted(bool completed) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyOnboardingCompleted, completed);
@@ -90,9 +78,6 @@ class SharedPreferencesHelper {
     return prefs.getBool(_keyOnboardingCompleted) ?? false;
   }
 
-  // =========================
-  // 🔹 Favorites
-  // =========================
   static Future<void> saveFavorites(List<String> favorites) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_keyFavorites, favorites);
@@ -124,10 +109,6 @@ class SharedPreferencesHelper {
     final favorites = prefs.getStringList(_keyFavorites) ?? [];
     return favorites.contains(id);
   }
-
-  // =========================
-  // 🔹 Clear All
-  // =========================
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

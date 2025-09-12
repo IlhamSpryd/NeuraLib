@@ -13,13 +13,13 @@ class Historybook {
   String? message;
   List<Datum>? data;
 
-  Historybook({this.message, this.data});
+  Historybook({required this.message, required this.data});
 
   factory Historybook.fromJson(Map<String, dynamic> json) => Historybook(
     message: json["message"],
-    data: json["data"] == null
-        ? []
-        : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
+    data: List<Datum>.from(
+      json["data"].map((x) => Datum.fromJson(x)),
+    ),
   );
 
   Map<String, dynamic> toJson() => {
@@ -31,42 +31,36 @@ class Historybook {
 }
 
 class Datum {
-  int? id;
-  int? userId;
-  int? bookId;
-  DateTime? borrowDate;
+  int id;
+  int userId;
+  int bookId;
+  DateTime borrowDate;
   DateTime? returnDate;
-  DateTime? createdAt;
-  DateTime? updatedAt;
+  DateTime createdAt;
+  DateTime updatedAt;
   Book? book;
 
   Datum({
-    this.id,
-    this.userId,
-    this.bookId,
-    this.borrowDate,
-    this.returnDate,
-    this.createdAt,
-    this.updatedAt,
-    this.book,
+    required this.id,
+    required this.userId,
+    required this.bookId,
+    required this.borrowDate,
+    required this.returnDate,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.book,
   });
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
-    id: json["id"],
-    userId: json["user_id"],
-    bookId: json["book_id"],
-    borrowDate: json["borrow_date"] == null
-        ? null
-        : DateTime.parse(json["borrow_date"]),
+    id: int.parse(json["id"].toString()),
+    userId: int.parse(json["user_id"].toString()),
+    bookId: int.parse(json["book_id"].toString()),
+    borrowDate: DateTime.parse(json["borrow_date"]),
     returnDate: json["return_date"] == null
         ? null
         : DateTime.parse(json["return_date"]),
-    createdAt: json["created_at"] == null
-        ? null
-        : DateTime.parse(json["created_at"]),
-    updatedAt: json["updated_at"] == null
-        ? null
-        : DateTime.parse(json["updated_at"]),
+    createdAt: DateTime.parse(json["created_at"]),
+    updatedAt: DateTime.parse(json["updated_at"]),
     book: json["book"] == null ? null : Book.fromJson(json["book"]),
   );
 
@@ -74,44 +68,44 @@ class Datum {
     "id": id,
     "user_id": userId,
     "book_id": bookId,
-    "borrow_date":
-        "${borrowDate!.year.toString().padLeft(4, '0')}-${borrowDate!.month.toString().padLeft(2, '0')}-${borrowDate!.day.toString().padLeft(2, '0')}",
-    "return_date":
-        "${returnDate!.year.toString().padLeft(4, '0')}-${returnDate!.month.toString().padLeft(2, '0')}-${returnDate!.day.toString().padLeft(2, '0')}",
-    "created_at": createdAt?.toIso8601String(),
-    "updated_at": updatedAt?.toIso8601String(),
+    "borrow_date": borrowDate.toIso8601String(),
+    "return_date": returnDate?.toIso8601String(),
+    "created_at": createdAt.toIso8601String(),
+    "updated_at": updatedAt.toIso8601String(),
     "book": book?.toJson(),
   };
 }
 
 class Book {
-  int? id;
-  String? title;
-  String? author;
-  int? stock;
-  DateTime? createdAt;
-  DateTime? updatedAt;
+  int id;
+  String title;
+  String author;
+  int stock;
+  String? cover;
+  DateTime createdAt;
+  DateTime updatedAt;
+  String? coverUrl;
 
   Book({
-    this.id,
-    this.title,
-    this.author,
-    this.stock,
-    this.createdAt,
-    this.updatedAt,
+    required this.id,
+    required this.title,
+    required this.author,
+    required this.stock,
+    this.cover,
+    required this.createdAt,
+    required this.updatedAt,
+    this.coverUrl,
   });
 
   factory Book.fromJson(Map<String, dynamic> json) => Book(
-    id: json["id"],
-    title: json["title"],
-    author: json["author"],
-    stock: json["stock"],
-    createdAt: json["created_at"] == null
-        ? null
-        : DateTime.parse(json["created_at"]),
-    updatedAt: json["updated_at"] == null
-        ? null
-        : DateTime.parse(json["updated_at"]),
+    id: int.parse(json["id"].toString()),
+    title: json["title"].toString(),
+    author: json["author"].toString(),
+    stock: int.parse(json["stock"].toString()),
+    cover: json["cover"],
+    createdAt: DateTime.parse(json["created_at"]),
+    updatedAt: DateTime.parse(json["updated_at"]),
+    coverUrl: json["cover_url"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -119,7 +113,9 @@ class Book {
     "title": title,
     "author": author,
     "stock": stock,
-    "created_at": createdAt?.toIso8601String(),
-    "updated_at": updatedAt?.toIso8601String(),
+    "cover": cover,
+    "created_at": createdAt.toIso8601String(),
+    "updated_at": updatedAt.toIso8601String(),
+    "cover_url": coverUrl,
   };
 }

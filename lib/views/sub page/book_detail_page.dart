@@ -8,6 +8,7 @@ class BookDetailPage extends StatefulWidget {
   final String author;
   final String? coverUrl;
   final int stock;
+  final VoidCallback? onBookBorrowed;
 
   const BookDetailPage({
     super.key,
@@ -16,6 +17,7 @@ class BookDetailPage extends StatefulWidget {
     required this.author,
     this.coverUrl,
     required this.stock,
+    this.onBookBorrowed,
   });
 
   @override

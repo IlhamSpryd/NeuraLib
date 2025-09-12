@@ -8,6 +8,7 @@ class BookDetailPage extends StatelessWidget {
   final String author;
   final String? coverUrl;
   final int stock;
+  final VoidCallback? onBookBorrowed; // Tambahkan callback
 
   const BookDetailPage({
     super.key,
@@ -16,7 +17,56 @@ class BookDetailPage extends StatelessWidget {
     required this.author,
     this.coverUrl,
     required this.stock,
+    this.onBookBorrowed, // Tambahkan parameter
   });
+
+  Future<void> _borrowBook(BuildContext context) async {
+    try {
+      // Tampilkan loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // Panggil API untuk meminjam buku
+      final result = await BookApi.borrowBook(bookId);
+
+      // Tutup loading indicator
+      if (context.mounted) Navigator.pop(context);
+
+      if (context.mounted) {
+        _showSnackBar(
+          context,
+          "Successfully borrowed: $title",
+          const Color(0xFF10B981),
+        );
+
+        // Panggil callback jika ada
+        if (onBookBorrowed != null) {
+          onBookBorrowed!();
+        }
+
+        // Optional: Refresh data atau navigasi kembali
+        Future.delayed(const Duration(seconds: 2), () {
+          if (context.mounted) {
+            Navigator.pop(context, true); // Kembali dengan status refresh
+          }
+        });
+      }
+    } catch (e) {
+      // Tutup loading indicator jika masih terbuka
+      if (context.mounted) Navigator.pop(context);
+
+      if (context.mounted) {
+        _showSnackBar(
+          context,
+          "Failed to borrow book: ${e.toString().replaceFirst('Exception: ', '')}",
+          const Color(0xFFEF4444),
+        );
+      }
+    }
+  }
 
   Future<void> _deleteBook(BuildContext context) async {
     try {
@@ -35,7 +85,11 @@ class BookDetailPage extends StatelessWidget {
       }
     } catch (e) {
       if (!context.mounted) return;
-      _showSnackBar(context, "Failed to delete book", Colors.red);
+      _showSnackBar(
+        context,
+        "Failed to delete book: ${e.toString().replaceFirst('Exception: ', '')}",
+        Colors.red,
+      );
     }
   }
 
@@ -383,13 +437,7 @@ class BookDetailPage extends StatelessWidget {
                         flex: 2,
                         child: ElevatedButton(
                           onPressed: stock > 0
-                              ? () {
-                                  _showSnackBar(
-                                    context,
-                                    "Successfully borrowed: $title",
-                                    const Color(0xFF10B981),
-                                  );
-                                }
+                              ? () => _borrowBook(context)
                               : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: stock > 0

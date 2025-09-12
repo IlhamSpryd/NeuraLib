@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:athena/views/main/dashboard_page.dart'; // ✅ Tambahkan import ini
+import 'package:athena/views/main/dashboard_page.dart';
 
 class ErrorBoundary extends StatefulWidget {
   final Widget child;

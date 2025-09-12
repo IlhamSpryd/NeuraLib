@@ -245,6 +245,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           author: book.author ?? 'Unknown Author',
           coverUrl: book.coverUrl,
           stock: book.stock ?? 0,
+          onBookBorrowed: _refreshBooks,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
@@ -456,23 +457,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
+  // Di home_page.dart - GUNAKAN _loadBooks yang sudah ada:
   void _navigateToAddBook() {
     Navigator.push(
       context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            AddBookPage(onBookUpdated: _refreshBooks),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return ScaleTransition(
-            scale: Tween<double>(begin: 0.0, end: 1.0).animate(
-              CurvedAnimation(parent: animation, curve: Curves.elasticOut),
-            ),
-            child: child,
-          );
-        },
+      MaterialPageRoute(
+        builder: (context) => AddBookPage(onBookUpdated: _loadBooks),
       ),
     ).then((refreshed) {
-      if (refreshed == true) _refreshBooks();
+      if (refreshed == true) {
+        _loadBooks(); 
+      }
     });
   }
 

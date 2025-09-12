@@ -75,21 +75,30 @@ class BookApi {
   }) async {
     try {
       final response = await _request(() async {
-        final body = {"title": title, "author": author, "stock": stock};
-        if (coverUrl != null) body["cover_url"] = coverUrl;
-        if (categoryId != null) body["category_id"] = categoryId.toString();
-        if (description != null) body["description"] = description;
-        if (isbn != null) body["isbn"] = isbn;
+        final body = {
+          "title": title,
+          "author": author,
+          "stock": stock,
+          if (coverUrl != null) "cover_url": coverUrl,
+          if (categoryId != null) "category_id": categoryId,
+          if (description != null) "description": description,
+          if (isbn != null) "isbn": isbn,
+        };
 
         debugPrint("Adding book to: ${Endpoint.books}");
+        debugPrint("Request body: $body");
+
         return http.post(
           Uri.parse(Endpoint.books),
           headers: await _headers(json: true),
           body: jsonEncode(body),
         );
       });
+
+      debugPrint("Add book response: ${response.body}");
       return addbookFromJson(response.body);
     } catch (e) {
+      debugPrint("Error adding book: $e");
       rethrow;
     }
   }
@@ -124,8 +133,8 @@ class BookApi {
       final response = await _request(() async {
         return http.get(uri, headers: await _headers());
       });
-      debugPrint("RAW RESPONSE: ${response.body}");
 
+      debugPrint("Books response: ${response.body}");
       return listbookFromJson(response.body);
     } catch (e) {
       debugPrint("ERROR in getBooks: $e");
@@ -145,8 +154,10 @@ class BookApi {
         return http.get(uri, headers: await _headers());
       });
 
+      debugPrint("Popular books response: ${response.body}");
       return listbookFromJson(response.body);
     } catch (e) {
+      debugPrint("Error getting popular books: $e");
       rethrow;
     }
   }
@@ -163,8 +174,10 @@ class BookApi {
         return http.get(uri, headers: await _headers());
       });
 
+      debugPrint("Recent books response: ${response.body}");
       return listbookFromJson(response.body);
     } catch (e) {
+      debugPrint("Error getting recent books: $e");
       rethrow;
     }
   }
@@ -179,8 +192,10 @@ class BookApi {
         return http.get(uri, headers: await _headers());
       });
 
+      debugPrint("Book detail response: ${response.body}");
       return addbookFromJson(response.body);
     } catch (e) {
+      debugPrint("Error getting book by ID: $e");
       rethrow;
     }
   }
@@ -198,14 +213,19 @@ class BookApi {
   }) async {
     try {
       final response = await _request(() async {
-        final body = {"title": title, "author": author, "stock": stock};
-        if (coverUrl != null) body["cover_url"] = coverUrl;
-        if (categoryId != null) body["category_id"] = categoryId.toString();
-        if (description != null) body["description"] = description;
-        if (isbn != null) body["isbn"] = isbn;
+        final body = {
+          "title": title,
+          "author": author,
+          "stock": stock,
+          if (coverUrl != null) "cover_url": coverUrl,
+          if (categoryId != null) "category_id": categoryId,
+          if (description != null) "description": description,
+          if (isbn != null) "isbn": isbn,
+        };
 
         final uri = Uri.parse(Endpoint.updateBook(id));
         debugPrint("Updating book at: $uri");
+        debugPrint("Update body: $body");
 
         return http.put(
           uri,
@@ -213,8 +233,11 @@ class BookApi {
           body: jsonEncode(body),
         );
       });
+
+      debugPrint("Update book response: ${response.body}");
       return updateBookFromJson(response.body);
     } catch (e) {
+      debugPrint("Error updating book: $e");
       rethrow;
     }
   }
@@ -228,26 +251,30 @@ class BookApi {
       final response = await _request(() async {
         return http.delete(uri, headers: await _headers());
       });
+
+      debugPrint("Delete book response: ${response.body}");
       return deleteBookFromJson(response.body);
     } catch (e) {
+      debugPrint("Error deleting book: $e");
       rethrow;
     }
   }
 
   // Borrow book
-  static Future<BorrowBook> borrowBook(
+  static Future<BorrowBooksResponse> borrowBook(
     int bookId, {
     DateTime? borrowDate,
   }) async {
     try {
       final response = await _request(() async {
-        final body = {"book_id": bookId.toString()};
-
-        if (borrowDate != null) {
-          body["borrow_date"] = borrowDate.toIso8601String();
-        }
+        final body = {
+          "book_id": bookId,
+          if (borrowDate != null) "borrow_date": borrowDate.toIso8601String(),
+        };
 
         debugPrint("Borrowing book from: ${Endpoint.borrow}");
+        debugPrint("Borrow body: $body");
+
         return http.post(
           Uri.parse(Endpoint.borrow),
           headers: await _headers(json: true),
@@ -255,33 +282,42 @@ class BookApi {
         );
       });
 
-      return borrowBookFromJson(response.body);
+      debugPrint("Borrow book response: ${response.body}");
+      return borrowBooksResponseFromJson(response.body);
     } catch (e) {
+      debugPrint("Error borrowing book: $e");
       rethrow;
     }
   }
 
-  // Return book
+  // Return book - FIXED: Changed from GET to PUT
   static Future<ReturnData> returnBook(
     int borrowId, {
     DateTime? returnDate,
   }) async {
     try {
       final response = await _request(() async {
-        final body = {};
-
-        if (returnDate != null) {
-          body["return_date"] = returnDate.toIso8601String();
-        }
+        final body = {
+          if (returnDate != null) "return_date": returnDate.toIso8601String(),
+        };
 
         final uri = Uri.parse(Endpoint.returnBook(borrowId));
         debugPrint("Returning book at: $uri");
+        debugPrint("Return body: $body");
 
-        return http.get(uri, headers: await _headers(json: true));
+        // Changed from GET to PUT
+        return http.put(
+          uri,
+          headers: await _headers(json: true),
+          body: jsonEncode(body),
+        );
       });
+
+      debugPrint("Return book response: ${response.body}");
       final result = returnBooksResponseFromJson(response.body);
       return result.data;
     } catch (e) {
+      debugPrint("Error returning book: $e");
       rethrow;
     }
   }
@@ -289,15 +325,17 @@ class BookApi {
   // Get my borrows (active)
   static Future<Historybook> getMyBorrows() async {
     try {
-      // Mengubah endpoint menjadi yang paling mungkin benar
-      final uri = Uri.parse(Endpoint.borrowsActive);
+      final uri = Uri.parse(Endpoint.myBorrows);
       debugPrint("Getting my borrows from: $uri");
 
       final response = await _request(() async {
         return http.get(uri, headers: await _headers());
       });
+
+      debugPrint("My borrows response: ${response.body}");
       return historybookFromJson(response.body);
     } catch (e) {
+      debugPrint("Error getting my borrows: $e");
       rethrow;
     }
   }
@@ -311,8 +349,29 @@ class BookApi {
       final response = await _request(() async {
         return http.get(uri, headers: await _headers());
       });
+
+      debugPrint("Borrow history response: ${response.body}");
       return historybookFromJson(response.body);
     } catch (e) {
+      debugPrint("Error getting borrow history: $e");
+      rethrow;
+    }
+  }
+
+  // Get active borrows
+  static Future<Historybook> getActiveBorrows() async {
+    try {
+      final uri = Uri.parse(Endpoint.borrowsActive);
+      debugPrint("Getting active borrows from: $uri");
+
+      final response = await _request(() async {
+        return http.get(uri, headers: await _headers());
+      });
+
+      debugPrint("Active borrows response: ${response.body}");
+      return historybookFromJson(response.body);
+    } catch (e) {
+      debugPrint("Error getting active borrows: $e");
       rethrow;
     }
   }
@@ -332,18 +391,26 @@ class BookApi {
           filename: 'book_cover_${DateTime.now().millisecondsSinceEpoch}.jpg',
         ),
       );
+
       var response = await request.send();
       var responseData = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(responseData);
+        debugPrint("Upload cover response: $responseData");
         return jsonResponse['url'] ??
             jsonResponse['path'] ??
-            jsonResponse['image_url'];
+            jsonResponse['image_url'] ??
+            jsonResponse['data']['url'] ??
+            jsonResponse['data']['path'] ??
+            jsonResponse['data']['image_url'];
       } else {
-        throw Exception('Failed to upload image: ${response.statusCode}');
+        throw Exception(
+          'Failed to upload image: ${response.statusCode} - $responseData',
+        );
       }
     } catch (e) {
+      debugPrint("Error uploading cover: $e");
       rethrow;
     }
   }
@@ -357,8 +424,39 @@ class BookApi {
       final response = await _request(() async {
         return http.get(uri, headers: await _headers());
       });
+
+      debugPrint("Borrow detail response: ${response.body}");
       return historybookFromJson(response.body);
     } catch (e) {
+      debugPrint("Error getting borrow detail: $e");
+      rethrow;
+    }
+  }
+
+  // Search books
+  static Future<Listbook> searchBooks(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final uri = Uri.parse(Endpoint.booksSearch).replace(
+        queryParameters: {
+          "search": query,
+          "page": page.toString(),
+          "limit": limit.toString(),
+        },
+      );
+
+      debugPrint("Searching books: $uri");
+      final response = await _request(() async {
+        return http.get(uri, headers: await _headers());
+      });
+
+      debugPrint("Search books response: ${response.body}");
+      return listbookFromJson(response.body);
+    } catch (e) {
+      debugPrint("Error searching books: $e");
       rethrow;
     }
   }

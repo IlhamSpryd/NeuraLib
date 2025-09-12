@@ -16,7 +16,7 @@ class Listbook {
 
   factory Listbook.fromJson(Map<String, dynamic> json) => Listbook(
     message: json["message"],
-    data: json["data"] == null ? null : Data.fromJson(json["data"]),
+    data: Data.fromJson(json["data"]),
   );
 
   Map<String, dynamic> toJson() => {"message": message, "data": data?.toJson()};
@@ -26,13 +26,11 @@ class Data {
   List<Item>? items;
   Meta? meta;
 
-  Data({this.items, this.meta});
+  Data({required this.items, required this.meta});
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    items: json["items"] == null
-        ? []
-        : List<Item>.from(json["items"]!.map((x) => Item.fromJson(x))),
-    meta: json["meta"] == null ? null : Meta.fromJson(json["meta"]),
+    items: List<Item>.from(json["items"].map((x) => Item.fromJson(x))),
+    meta: Meta.fromJson(json["meta"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -106,10 +104,10 @@ class Meta {
   Meta({this.currentPage, this.lastPage, this.perPage, this.total});
 
   factory Meta.fromJson(Map<String, dynamic> json) => Meta(
-    currentPage: _parseToInt(json["current_page"]),
-    lastPage: _parseToInt(json["last_page"]),
-    perPage: _parseToInt(json["per_page"]),
-    total: _parseToInt(json["total"]),
+    currentPage: json["current_page"],
+    lastPage: json["last_page"],
+    perPage: json["per_page"],
+    total: json["total"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -118,10 +116,4 @@ class Meta {
     "per_page": perPage,
     "total": total,
   };
-  static int? _parseToInt(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    if (value is String) return int.tryParse(value);
-    return null;
-  }
 }

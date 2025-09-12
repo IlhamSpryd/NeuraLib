@@ -14,10 +14,8 @@ class Addbook {
 
   Addbook({this.message, this.data});
 
-  factory Addbook.fromJson(Map<String, dynamic> json) => Addbook(
-    message: json["message"],
-    data: json["data"] == null ? null : Data.fromJson(json["data"]),
-  );
+  factory Addbook.fromJson(Map<String, dynamic> json) =>
+      Addbook(message: json["message"], data: Data.fromJson(json["data"]));
 
   Map<String, dynamic> toJson() => {"message": message, "data": data?.toJson()};
 }
@@ -50,12 +48,8 @@ class Data {
     stock: json["stock"],
     coverPath: json["cover_path"],
     coverUrl: json["cover_url"],
-    createdAt: json["created_at"] == null
-        ? null
-        : DateTime.parse(json["created_at"]),
-    updatedAt: json["updated_at"] == null
-        ? null
-        : DateTime.parse(json["updated_at"]),
+    createdAt: DateTime.parse(json["created_at"]),
+    updatedAt: DateTime.parse(json["updated_at"]),
   );
 
   Map<String, dynamic> toJson() => {

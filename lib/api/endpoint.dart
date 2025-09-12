@@ -46,5 +46,5 @@ class Endpoint {
   static const String settingsPassword = "$settings/password";
   static const String settingsNotifications = "$settings/notifications";
 
-  
+
 }

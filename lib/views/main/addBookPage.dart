@@ -37,7 +37,6 @@ class AddBookPage extends StatefulWidget {
 
 class _AddBookPageState extends State<AddBookPage>
     with TickerProviderStateMixin {
-  // Changed from SingleTickerProviderStateMixin
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _authorController = TextEditingController();
@@ -227,18 +226,14 @@ class _AddBookPageState extends State<AddBookPage>
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             children: [
-              Icon(
-                icon,
-                size: 32,
-                color: iconColor, // 👈 pake warna dari parameter
-              ),
+              Icon(icon, size: 32, color: iconColor),
               const SizedBox(height: 8),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: textColor, // 👈 pake warna dari parameter
+                  color: textColor,
                 ),
               ),
             ],
@@ -272,7 +267,7 @@ class _AddBookPageState extends State<AddBookPage>
       }
 
       if (widget.isEditMode) {
-        final response = await BookApi.updateBook(
+        await BookApi.updateBook(
           id: widget.bookId!,
           title: _titleController.text.trim(),
           author: _authorController.text.trim(),
@@ -286,15 +281,13 @@ class _AddBookPageState extends State<AddBookPage>
               : null,
         );
 
-        if (response.data != null) {
-          _showSnackBar("Buku berhasil diperbarui!", isError: false);
-          if (widget.onBookUpdated != null) {
-            widget.onBookUpdated!();
-          }
-          Navigator.pop(context, true);
+        _showSnackBar("Buku berhasil diperbarui!", isError: false);
+        if (widget.onBookUpdated != null) {
+          widget.onBookUpdated!();
         }
+        Navigator.pop(context, true);
       } else {
-        final response = await BookApi.addBook(
+        await BookApi.addBook(
           title: _titleController.text.trim(),
           author: _authorController.text.trim(),
           stock: stock,
@@ -307,13 +300,11 @@ class _AddBookPageState extends State<AddBookPage>
               : null,
         );
 
-        if (response.data != null) {
-          _showSnackBar("Buku berhasil ditambahkan!", isError: false);
-          if (widget.onBookUpdated != null) {
-            widget.onBookUpdated!();
-          }
-          Navigator.pop(context, true);
+        _showSnackBar("Buku berhasil ditambahkan!", isError: false);
+        if (widget.onBookUpdated != null) {
+          widget.onBookUpdated!();
         }
+        Navigator.pop(context, true);
       }
     } catch (e) {
       _showSnackBar("Error: ${e.toString()}", isError: true);
