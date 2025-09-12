@@ -12,7 +12,6 @@ class AddBookPage extends StatefulWidget {
   final int? initialStock;
   final String? initialCoverUrl;
   final String? initialDescription;
-  final String? initialIsbn;
   final int? initialCategoryId;
   final bool isEditMode;
   final VoidCallback? onBookUpdated;
@@ -25,7 +24,6 @@ class AddBookPage extends StatefulWidget {
     this.initialStock,
     this.initialCoverUrl,
     this.initialDescription,
-    this.initialIsbn,
     this.initialCategoryId,
     this.onBookUpdated,
   }) : isEditMode = bookId != null;
@@ -41,7 +39,6 @@ class _AddBookPageState extends State<AddBookPage>
   final TextEditingController _authorController = TextEditingController();
   final TextEditingController _stockController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _isbnController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
   File? _selectedImage;
@@ -121,7 +118,6 @@ class _AddBookPageState extends State<AddBookPage>
       _authorController.text = widget.initialAuthor ?? '';
       _stockController.text = widget.initialStock?.toString() ?? '';
       _descriptionController.text = widget.initialDescription ?? '';
-      _isbnController.text = widget.initialIsbn ?? '';
       _imageUrl = widget.initialCoverUrl;
     }
   }
@@ -132,7 +128,6 @@ class _AddBookPageState extends State<AddBookPage>
     _authorController.dispose();
     _stockController.dispose();
     _descriptionController.dispose();
-    _isbnController.dispose();
     _slideController.dispose();
     _fadeController.dispose();
     _scaleController.dispose();
@@ -314,9 +309,6 @@ class _AddBookPageState extends State<AddBookPage>
           description: _descriptionController.text.trim().isNotEmpty
               ? _descriptionController.text.trim()
               : null,
-          isbn: _isbnController.text.trim().isNotEmpty
-              ? _isbnController.text.trim()
-              : null,
         );
 
         _showSnackBar("Book updated successfully!", isError: false);
@@ -328,9 +320,6 @@ class _AddBookPageState extends State<AddBookPage>
           coverUrl: coverUrl,
           description: _descriptionController.text.trim().isNotEmpty
               ? _descriptionController.text.trim()
-              : null,
-          isbn: _isbnController.text.trim().isNotEmpty
-              ? _isbnController.text.trim()
               : null,
         );
 
@@ -696,14 +685,6 @@ class _AddBookPageState extends State<AddBookPage>
                                   ? "Stock is required"
                                   : null,
                               prefixIcon: Icons.inventory_2_outlined,
-                            ),
-                            const SizedBox(height: 20),
-                            _buildTextField(
-                              controller: _isbnController,
-                              label: "ISBN (Optional)",
-                              hintText: "Enter ISBN number",
-                              validator: (val) => null,
-                              prefixIcon: Icons.qr_code_outlined,
                             ),
                             const SizedBox(height: 20),
                             _buildTextField(
