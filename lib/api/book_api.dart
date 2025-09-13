@@ -141,25 +141,6 @@ class BookApi {
       rethrow;
     }
   }
-
-  // Get book by ID
-  static Future<Addbook> getBookById(int id) async {
-    try {
-      final uri = Uri.parse(Endpoint.bookDetail(id));
-      debugPrint("Getting book by ID from: $uri");
-
-      final response = await _request(() async {
-        return http.get(uri, headers: await _headers());
-      });
-
-      debugPrint("Book detail response: ${response.body}");
-      return addbookFromJson(response.body);
-    } catch (e) {
-      debugPrint("Error getting book by ID: $e");
-      rethrow;
-    }
-  }
-
   // Update book
   static Future<UpdateBook> updateBook({
     required int id,
@@ -167,9 +148,6 @@ class BookApi {
     required String author,
     required int stock,
     String? coverUrl,
-    int? categoryId,
-    String? description,
-    String? isbn,
   }) async {
     try {
       final response = await _request(() async {
@@ -178,9 +156,6 @@ class BookApi {
           "author": author,
           "stock": stock,
           if (coverUrl != null) "cover_url": coverUrl,
-          if (categoryId != null) "category_id": categoryId,
-          if (description != null) "description": description,
-          if (isbn != null) "isbn": isbn,
         };
 
         final uri = Uri.parse(Endpoint.updateBook(id));
@@ -250,7 +225,7 @@ class BookApi {
     }
   }
 
-  // Return book - FIXED: Changed from GET to PUT
+  // Return book
   static Future<ReturnData> returnBook(
     int borrowId, {
     DateTime? returnDate,
@@ -264,8 +239,6 @@ class BookApi {
         final uri = Uri.parse(Endpoint.returnBook(borrowId));
         debugPrint("Returning book at: $uri");
         debugPrint("Return body: $body");
-
-        // Changed from GET to PUT
         return http.put(
           uri,
           headers: await _headers(json: true),
@@ -278,24 +251,6 @@ class BookApi {
       return result.data;
     } catch (e) {
       debugPrint("Error returning book: $e");
-      rethrow;
-    }
-  }
-
-  // Get my borrows (active)
-  static Future<Historybook> getMyBorrows() async {
-    try {
-      final uri = Uri.parse(Endpoint.myBorrows);
-      debugPrint("Getting my borrows from: $uri");
-
-      final response = await _request(() async {
-        return http.get(uri, headers: await _headers());
-      });
-
-      debugPrint("My borrows response: ${response.body}");
-      return historybookFromJson(response.body);
-    } catch (e) {
-      debugPrint("Error getting my borrows: $e");
       rethrow;
     }
   }

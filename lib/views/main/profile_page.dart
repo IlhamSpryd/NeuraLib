@@ -33,7 +33,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfile() async {
     try {
       final UserModel? userData = await UserApi.getProfile();
-      final Historybook borrows = await BookApi.getMyBorrows();
+      final Historybook borrows = await BookApi.getActiveBorrows();
 
       if (userData != null) {
         final name = userData.data.user.name;

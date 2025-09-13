@@ -1,5 +1,5 @@
 import 'package:athena/api/authentication_api.dart';
-import 'package:athena/views/main/dashboard_page.dart';
+import 'package:athena/views/auth/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -49,7 +49,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              "Registrasi sukses, selamat datang ${result.data.user.name}",
+              "Registrasi sukses, silahkan login.",
               style: GoogleFonts.inter(color: Colors.white),
             ),
             backgroundColor: Colors.green,
@@ -61,7 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
         );
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const DashboardPage()),
+          MaterialPageRoute(builder: (_) => const LoginPage()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

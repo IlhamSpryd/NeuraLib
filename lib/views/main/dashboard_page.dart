@@ -135,7 +135,7 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         child: Center(
           child: SizedBox(
-            width: 24, // Slightly larger for better visibility
+            width: 24,
             height: 24,
             child: Image.asset(
               _currentIndex == index ? activeIcon : inactiveIcon,

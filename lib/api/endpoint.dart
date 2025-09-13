@@ -13,8 +13,6 @@ class Endpoint {
   static String bookDetail(int id) => "$books/$id";
   static String updateBook(int id) => "$books/$id";
   static String deleteBook(int id) => "$books/$id";
-  static const String booksPopular = "$books/popular";
-  static const String booksRecent = "$books/recent";
   static const String booksSearch = "$books/search";
 
   // Upload
@@ -29,18 +27,13 @@ class Endpoint {
   static const String borrowsActive = "$borrow/active";
 
   // History
-   static const String history = '$baseURL/history'; 
+  static const String history = '$baseURL/history';
 
   // Users
   static const String users = "$baseURL/users";
-  static String userDetail(int id) => "$users/$id";
-  static String userBorrows(int userId) => "$users/$userId/borrows";
-  static String userHistoryEndpoint(int userId) => "$users/$userId/history";
 
   // Settings
   static const String settings = "$baseURL/settings";
   static const String settingsProfile = "$settings/profile";
   static const String settingsPassword = "$settings/password";
-
-
 }

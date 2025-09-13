@@ -306,9 +306,6 @@ class _AddBookPageState extends State<AddBookPage>
           author: _authorController.text.trim(),
           stock: stock,
           coverUrl: coverUrl,
-          description: _descriptionController.text.trim().isNotEmpty
-              ? _descriptionController.text.trim()
-              : null,
         );
 
         _showSnackBar("Book updated successfully!", isError: false);
@@ -318,9 +315,6 @@ class _AddBookPageState extends State<AddBookPage>
           author: _authorController.text.trim(),
           stock: stock,
           coverUrl: coverUrl,
-          description: _descriptionController.text.trim().isNotEmpty
-              ? _descriptionController.text.trim()
-              : null,
         );
 
         _showSnackBar("Book added successfully!", isError: false);
@@ -342,36 +336,24 @@ class _AddBookPageState extends State<AddBookPage>
     }
   }
 
-  void _showSnackBar(String message, {required bool isError}) {
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
+
+    final theme = Theme.of(context);
+    final color = isError ? theme.colorScheme.error : theme.colorScheme.primary;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isError ? Icons.error_outline : Icons.check_circle_outline,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: isError
-            ? Theme.of(context).colorScheme.error
-            : const Color(0xFF2E7D32),
+        content: Text(message, style: GoogleFonts.inter(color: Colors.white)),
+        backgroundColor: color,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 4),
+        margin: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 80, // 👈 biar aman
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -608,11 +590,7 @@ class _AddBookPageState extends State<AddBookPage>
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () {
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/profile',
-              (route) => false,
-            );
+            Navigator.pushReplacementNamed(context, '/profile');
           },
         ),
       ),
